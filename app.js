@@ -640,6 +640,164 @@ function importResources() {
 }
 
 // ============================================================
+// ADMIN  (feature 15)
+// ============================================================
+const ADMIN_PASSWORD = 'nexus2025';
+
+function openAdmin() {
+    document.getElementById('admin-modal-overlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('admin-login').style.display    = STATE.adminAuth ? 'none' : 'block';
+    document.getElementById('admin-content').style.display  = STATE.adminAuth ? 'block' : 'none';
+    if (STATE.adminAuth) renderAdminList();
+}
+function closeAdmin() {
+    document.getElementById('admin-modal-overlay').classList.remove('active');
+    document.body.style.overflow = '';
+    document.getElementById('resource-form-container').style.display = 'none';
+    document.getElementById('admin-password-input').value = '';
+}
+function checkAdminPassword() {
+    const input = document.getElementById('admin-password-input');
+    if (input.value === ADMIN_PASSWORD) {
+        STATE.adminAuth = true;
+        document.getElementById('admin-login').style.display = 'none';
+        document.getElementById('admin-content').style.display = 'block';
+        renderAdminList();
+    } else {
+        input.style.borderColor = 'var(--danger)';
+        showToast('Contraseña incorrecta', 'error');
+        setTimeout(() => { input.style.borderColor = ''; }, 1500);
+    }
+}
+function renderAdminList() {
+    const all = getAllResources();
+    const cats = [...new Set(all.map(r => r.category))];
+    document.getElementById('cat-suggestions').innerHTML = cats.map(c => `<option value="${c}">`).join('');
+
+    const hiddenList = NEXUS_DATA_DEFAULT.filter(r => hiddenIds.includes(r.id));
+    document.getElementById('admin-resource-list').innerHTML = `
+        <table class="admin-table">
+            <thead><tr>
+                <th>ID</th><th>Nombre</th><th>Categoría</th><th>Trust</th><th>Tipo</th><th>Acciones</th>
+            </tr></thead>
+            <tbody>${all.map(r => `
+                <tr>
+                    <td style="font-family:var(--font-mono);color:var(--text-tertiary)">#${r.id}</td>
+                    <td><strong>${esc(r.name)}</strong></td>
+                    <td><span class="cat-badge" style="border-color:${r.color};color:${r.color}">${esc(r.category)}</span></td>
+                    <td style="color:${getTrustColor(r.trust)};font-family:var(--font-mono)">${r.trust}/5</td>
+                    <td style="font-size:0.68rem;color:var(--text-tertiary);font-family:var(--font-mono)">${r.id>=1000?'CUSTOM':'DEFAULT'}</td>
+                    <td>
+                        <button class="admin-action-btn" onclick="openResourceForm(${r.id})">Editar</button>
+                        <button class="admin-action-btn admin-action-btn--danger" onclick="deleteResource(${r.id})">
+                            ${r.id>=1000?'Eliminar':'Ocultar'}
+                        </button>
+                    </td>
+                </tr>`).join('')}
+            </tbody>
+        </table>
+        ${hiddenList.length ? `
+            <div style="margin-top:0.75rem;padding:0.6rem 0.9rem;background:var(--bg-tertiary);border-radius:8px;font-size:0.75rem;color:var(--text-tertiary);font-family:var(--font-mono)">
+                ${hiddenList.length} oculto${hiddenList.length!==1?'s':''}: ${hiddenList.map(r=>esc(r.name)).join(', ')}
+            </div>` : ''}
+    `;
+}
+function openResourceForm(id = null) {
+    document.getElementById('f-editing-id').value = id || '';
+    document.getElementById('form-title').textContent = id ? 'Editar Recurso' : 'Añadir Recurso';
+    if (id) {
+        const item = getAllResources().find(r => r.id === id);
+        if (!item) return;
+        document.getElementById('f-name').value     = item.name;
+        document.getElementById('f-category').value = item.category;
+        document.getElementById('f-url').value      = item.url;
+        document.getElementById('f-desc').value     = item.desc;
+        document.getElementById('f-notes').value    = item.notes || '';
+        document.getElementById('f-tags').value     = item.tags.join(', ');
+        document.getElementById('f-trust').value    = item.trust;
+        document.getElementById('f-color').value    = item.color || '#00D4FF';
+        document.getElementById('f-warn').value     = item.warn || '';
+        document.getElementById('f-isnew').checked  = !!item.isNew;
+    } else {
+        ['f-name','f-category','f-url','f-desc','f-notes','f-warn'].forEach(i => {
+            document.getElementById(i).value = '';
+        });
+        document.getElementById('f-tags').value    = '';
+        document.getElementById('f-trust').value   = 3;
+        document.getElementById('f-color').value   = '#00D4FF';
+        document.getElementById('f-isnew').checked = false;
+    }
+    const container = document.getElementById('resource-form-container');
+    container.style.display = 'block';
+    setTimeout(() => container.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+}
+function cancelResourceForm() {
+    document.getElementById('resource-form-container').style.display = 'none';
+    document.getElementById('f-editing-id').value = '';
+}
+function saveResource() {
+    const name     = document.getElementById('f-name').value.trim();
+    const category = document.getElementById('f-category').value.trim();
+    const url      = document.getElementById('f-url').value.trim();
+    const desc     = document.getElementById('f-desc').value.trim();
+    if (!name || !category || !url || !desc) {
+        showToast('Rellena los campos obligatorios (*)', 'error'); return;
+    }
+    const data = {
+        name, category, url, desc,
+        notes: document.getElementById('f-notes').value.trim(),
+        tags:  document.getElementById('f-tags').value.split(',').map(t => t.trim()).filter(Boolean),
+        trust: Math.min(5, Math.max(1, parseInt(document.getElementById('f-trust').value) || 3)),
+        color: document.getElementById('f-color').value,
+        warn:  document.getElementById('f-warn').value.trim() || undefined,
+        isNew: document.getElementById('f-isnew').checked,
+        added: new Date().toISOString().slice(0,10),
+    };
+    const editId = parseInt(document.getElementById('f-editing-id').value) || null;
+    if (editId) {
+        if (editId >= 1000) {
+            const idx = customResources.findIndex(r => r.id === editId);
+            if (idx >= 0) customResources[idx] = { ...customResources[idx], ...data };
+            saveJSON('nexus_custom', customResources);
+        } else {
+            overrides[editId] = data;
+            saveJSON('nexus_overrides', overrides);
+        }
+        showToast('Recurso actualizado', 'success');
+    } else {
+        const maxId = Math.max(...customResources.map(r => r.id), 999);
+        customResources.push({ id: maxId + 1, ...data });
+        saveJSON('nexus_custom', customResources);
+        showToast('Recurso añadido', 'success');
+    }
+    cancelResourceForm();
+    renderAdminList();
+    render();
+}
+function deleteResource(id) {
+    const label = id >= 1000 ? 'eliminar' : 'ocultar';
+    if (!confirm(`¿Seguro que quieres ${label} este recurso?`)) return;
+    if (id >= 1000) {
+        customResources = customResources.filter(r => r.id !== id);
+        saveJSON('nexus_custom', customResources);
+    } else {
+        hiddenIds.push(id);
+        saveJSON('nexus_hidden', hiddenIds);
+    }
+    renderAdminList();
+    render();
+    showToast('Recurso eliminado', 'success');
+}
+function resetHidden() {
+    if (!hiddenIds.length) { showToast('No hay recursos ocultos', 'info'); return; }
+    hiddenIds = [];
+    saveJSON('nexus_hidden', hiddenIds);
+    render();
+    showToast('Recursos restaurados', 'success');
+}
+
+// ============================================================
 // TOAST
 // ============================================================
 function showToast(msg, type = 'info') {
