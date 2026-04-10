@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutoriales | Jacsaw Nexus</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=DM+Sans:wght@400;500&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="jacsaw-nexus.css">
+    <style>
+        .tutorials-container { max-width: 1000px; margin: 80px auto; padding: 20px; }
+        
+        /* Estilo del Desplegable */
+        .tutorial-card { 
+            background: var(--bg-secondary); 
+            border: 1px solid var(--border-subtle); 
+            border-radius: var(--radius); 
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        
+        summary {
+            padding: 1.5rem 2rem;
+            list-style: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            color: var(--accent);
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        summary:hover { background: var(--bg-tertiary); }
+        summary::-webkit-details-marker { display: none; }
+        summary::after { content: '▼'; font-size: 0.8rem; color: var(--text-tertiary); }
+        details[open] summary::after { content: '▲'; }
+        details[open] summary { border-bottom: 1px solid var(--border-subtle); }
+
+        .tutorial-content { padding: 2rem; }
+
+        .steps-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+            gap: 25px; 
+        }
+
+        .step { 
+            background: var(--bg-tertiary); 
+            padding: 15px; 
+            border-radius: 8px; 
+            border: 1px solid var(--border-medium);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .step img { 
+            width: 100%; 
+            border-radius: 4px; 
+            margin-bottom: 12px; 
+            cursor: zoom-in; 
+            transition: transform 0.2s;
+        }
+        
+        .step img:hover { transform: scale(1.02); filter: brightness(1.1); }
+
+        .step-number { 
+            display: inline-block; 
+            background: var(--accent); 
+            color: var(--bg-primary); 
+            padding: 2px 10px; 
+            border-radius: 4px; 
+            font-weight: bold; 
+            margin-bottom: 10px;
+            align-self: flex-start;
+        }
+
+        .step-desc { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5; }
+
+        /* MODAL PARA AMPLIAR IMAGEN */
+        #img-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            padding: 40px;
+            cursor: zoom-out;
+            justify-content: center;
+            align-items: center;
+        }
+        #img-modal img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+        /* Banner Profesional */
+.requirement-banner {
+    background: var(--bg-secondary);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 1rem 1.5rem;
+    margin: 20px auto;
+    max-width: 1000px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 15px rgba(0, 212, 255, 0.1);
+}
+
+.banner-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.banner-icon {
+    font-size: 1.5rem;
+}
+
+.requirement-banner p {
+    margin: 0;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+}
+
+.highlight {
+    color: var(--accent);
+    font-weight: bold;
+}
+
+.banner-btn {
+    background: var(--accent);
+    color: var(--bg-primary);
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    white-space: nowrap;
+    transition: all var(--transition);
+}
+
+.banner-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px var(--accent-glow);
+    filter: brightness(1.1);
+}
+
+.banner-btn span {
+    margin-left: 5px;
+}
+
+/* Responsive para el banner */
+@media (max-width: 768px) {
+    .requirement-banner {
+        flex-direction: column;
+        text-align: center;
+    }
+    .banner-content {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+    </style>
+</head>
+<body>
+    
+    <nav class="navbar">
+        <a href="index.html" class="logo">Jacsaw Nexus</a>
+        <div class="navbar-actions">
+            <a href="index.html" class="nav-btn" style="text-decoration: none;">← Volver al Índice</a>
+        </div>
+    </nav>
+    <div class="requirement-banner">
+    <div class="banner-content">
+        <span class="banner-icon">⚠️</span>
+        <p>
+            <strong>REQUISITO IMPORTANTE:</strong> Para seguir estos tutoriales necesitas tener instalado 
+            <span class="highlight">qBitTorrent</span>.
+        </p>
+    </div>
+    <a href="https://www.qbittorrent.org/download" target="_blank" class="banner-btn">
+        Descargar qBitTorrent <span>→</span>
+    </a>
+</div>
+    <div class="tutorials-container">
+        
+        <details class="tutorial-card">
+            <summary>FitGirl Repacks</summary>
+            <div class="tutorial-content">
+                <div class="steps-grid">
+                    <div class="step">
+                        <span class="step-number">Paso 1</span>
+                        <img src="Tutoriales/Fitgirl-1.png" alt="Paso 1">
+                        <p class="step-desc">Primero tenemos que irnos a la parte de torrent, y le daremos a magnet, para que se nos abra en qBitTorrent, a mi me gusta mas el primero (MULTI10)</p>
+                    </div>
+
+                    <div class="step">
+                        <span class="step-number">Paso 2</span>
+                        <img src="Tutoriales/Fitgirl-2.png" alt="Paso 2">
+                        <p class="step-desc">Ahora le daremos a abrir con qBitTorrent, es necesario para hacer la instalación más fácil.</p>
+                    </div>
+
+                    <div class="step">
+                        <span class="step-number">Paso 3</span>
+                        <img src="Tutoriales/Fitgirl-3.png" alt="Paso 3">
+                        <p class="step-desc">Ahora en la parte de arriba a la izquierda, seleccionaremos la carpeta de destino de donde queramos instalar el instalador del juego, recordemos que esto no es el juego aún. Y ya le damos a aceptar para iniciar la descarga del instalador del juego.</p>
+                    </div>
+
+                    <div class="step">
+                        <span class="step-number">Paso 4</span>
+                        <img src="Tutoriales/Fitgirl-4.png" alt="Paso 4">
+                        <p class="step-desc">Una vez finalizada la descarga del instalador, nos iremos a la ruta indicada anteriormente, y abriremos la carpeta que se nos ha descargado, y una vez abierta, tendremos que buscar el instalador, el setup, y lo ejecutamos.</p>
+                    </div>
+
+                    <div class="step">
+                        <span class="step-number">Paso 5</span>
+                        <img src="Tutoriales/Fitgirl-5.png" alt="Paso 5">
+                        <p class="step-desc">Ahora seleccionamos el idioma que queremos en el instalador, esto no es el idioma del juego, es simplemente el del instalador, Fitgirl nos da a elegir entre ruso e inglés, yo elijo inglés por comodidad, y al seleccionar le damos a OK.</p>
+                    </div>
+
+                    <div class="step">
+                        <span class="step-number">Paso 6</span>
+                        <img src="Tutoriales/Fitgirl-6.png" alt="Paso 6">
+                        <p class="step-desc">Ahora el instalador te da la bienvenida y tal, pero bueno, lo importante aquí es avanzar para poder instalar nuestro juego, asique le damos a NEXT >.</p>
+                    </div>
+
+                    <div class="step">
+                        <span class="step-number">Paso 7</span>
+                        <img src="Tutoriales/Fitgirl-7.png" alt="Paso 7">
+                        <p class="step-desc">Aquí lo que te dice es básicamente lo que vas a instalar, si quieres leertelo perfecto si no no pasa nada, le damos a NEXT >.</p>
+                    </div>
+
+                    <div class="step">
+                        <span class="step-number">Paso 8</span>
+                        <img src="Tutoriales/Fitgirl-8.png" alt="Paso 8">
+                        <p class="step-desc">Ahora en el cuadrado de arriba a la derecha le indicamos la ruta donde queremos instalar EL JUEGO, aqui ya no hay nada de instaladores, ya es el juego como tal, luego los dos cuadrados esos, uno es que si lo marcas, no te crea la carpeta en el Start Menu, esto es básicamente que si la marcas, el juego NO te aparece en el buscador de Windows, pero no la marcas el juego SI te aparece al buscarlo en el buscador de Windows, si lo marcas tendrás que ir a la carpeta cada vez que quieras abrir el juego, si no lo marcas simplemente tendras que buscar el nombre del juego, y el otro cuadrado es si quieres el icono en el escritorio, si lo marcas se pone si no pues no, una vez aclarado esto, pones lo que quieras y le damos a NEXT >.</p>
+                    </div>
+
+                    <div class="step">
+                        <span class="step-number">Paso 9</span>
+                        <img src="Tutoriales/Fitgirl-9.png" alt="Paso 9">
+                        <p class="step-desc">Ahora seleccionaremos el idioma DEL JUEGO, yo en mi caso selecciono Español porque es el idioma que yo hablo, una vez seleccionado, le damos a INSTALL. Luego comenzará la instalacion y simplemente hay que esperar.</p>
+                    </div>
+
+                    <div class="step">
+                        <span class="step-number">Paso 10</span>
+                        <img src="Tutoriales/Fitgirl-10.png" alt="Paso 10">
+                        <p class="step-desc">Una vez finalizada la instalación te aparecen 2 checks, dos botones, el primero, el que ahora mismo esta desmarcado, es para cuando le des a finalizar te lleve a la página de FitGirl, ya tu pones lo que quieras, yo siempre lo quito, y el segundo check es para si quieres iniciar el juego nada más darle a finish, para terminar de instalarlo y jugar directamente, si quitas esto, puedes simplemente dejarlo isntalado y cuando quieras lo abres, al dejarlo activado lo puedes jugar al momento de darle al botón de FINISH, y una vez seleccionado lo que queramos, le damos al botón de FINISH.</p>
+                    </div>
+
+                    <div class="step">
+                        <span class="step-number">Paso 11</span>
+                        <img src="Tutoriales/Fitgirl-11.png" alt="Paso 11">
+                        <p class="step-desc">Y ahora no te asustes, porque lo que está haciendo es checkear si todos los archivos están correctamente, para evitar errores, esto simplemente escanea los archivos del juego para verificar si la instalación se ha completado correctamente, una vez finalice, tienes que cerrarlo manualmente, y si le has dado a que se abra el juego, el juego se abrirá automáticamente.</p>
+                    </div>
+
+                    <div class="step">
+                        <span class="step-number">Paso 12</span>
+                        <img src="Tutoriales/Fitgirl-12.png" alt="Paso 12">
+                        <p class="step-desc">Y ahora simplemente a disfrutar y a jugar, eso sería todo.</p>
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <details class="tutorial-card">
+            <summary>DODI Repacks</summary>
+            <div class="tutorial-content">
+                <div class="steps-grid">
+                    <div class="step">
+                        <span class="step-number">Paso 1</span>
+                        <img src="Tutoriales/dodi_1.jpg" alt="Paso 1">
+                        <p class="step-desc">Busca el juego en el catálogo oficial.</p>
+                    </div>
+                </div>
+            </div>
+        </details>
+
+    </div>
+
+    <div id="img-modal">
+        <img src="" id="modal-img-content">
+    </div>
+
+    <script>
+        // Función para ampliar la imagen
+        const modal = document.getElementById('img-modal');
+        const modalImg = document.getElementById('modal-img-content');
+        
+        // Seleccionamos todas las imágenes de los pasos
+        document.querySelectorAll('.step img').forEach(img => {
+            img.onclick = function() {
+                modal.style.display = "flex";
+                modalImg.src = this.src;
+            }
+        });
+
+        // Cerrar el modal al hacer click en cualquier parte
+        modal.onclick = function() {
+            modal.style.display = "none";
+        }
+    </script>
+
+</body>
+</html>
