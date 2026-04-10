@@ -203,4 +203,37 @@ const NEXUS_DATA_DEFAULT = [
         desc: 'La mayor comunidad hispana de juegos de PC y actualizaciones.',
         notes: 'Excelente para encontrar juegos con soporte para multijugador online (Online-Fix). El sitio se actualiza diariamente y ofrece múltiples opciones de descarga. Muy útil para tutoriales en español.'
     },
+    {
+        id: 26, name: 'TinyRepacks', category: 'REPACKERS',
+        url: 'https://tiny-repacks.win/', trust: 5,
+        tags: ['PC', 'Ultra-Small'], color: '#7C3AED',
+        isNew: true, added: '2026-04-10',
+        desc: 'Especialistas en repacks de tamaño mínimo para conexiones lentas.',
+        notes: 'Nueva estrella en la escena. Utilizan algoritmos de compresión propietarios que a veces superan a FitGirl en títulos específicos. Comunidad creciente en Lemmy y Reddit.'
+    },
+    {
+        id: 27, name: 'Ziperto', category: 'EMULACIÓN',
+        url: 'https://www.ziperto.com/', trust: 4,
+        tags: ['Switch', '3DS', 'PS Vita'], color: '#F59E0B',
+        isNew: true, added: '2026-04-10',
+        desc: 'Líder en ROMs de consolas portátiles y actualizaciones.',
+        notes: 'Extremadamente confiable para formatos .NSP, .CIA y .VPK. Organizado por partes en servidores como 1Fichier y Zippyshare (mirrors). Obligatorio usar bloqueador de anuncios.'
+    },
+    {
+        id: 30, name: 'Linux-Quack', category: 'LINUX',
+        url: 'https://linux-quack.io/', trust: 5,
+        tags: ['SteamDeck', 'Flatpak', 'Native'], color: '#EC4899',
+        isNew: true, added: '2026-04-10',
+        desc: 'Scripts y binarios optimizados nativamente para SteamOS.',
+        notes: 'Especialmente diseñado para usuarios de Steam Deck. Ofrecen instaladores en formato Flatpak que configuran automáticamente Wine y Proton sin tocar la terminal.'
+    },
+    {
+        id: 32, name: '1337x (Games Section)', category: 'TORRENTS',
+        url: 'https://1337x.to/popular-games', trust: 5,
+        tags: ['Multi-System', 'Scene', 'Repacks'], color: '#EF4444',
+        isNew: true, added: '2026-04-10',
+        desc: 'El buscador de torrents más activo y organizado actualmente.',
+        notes: 'IMPORTANTE: Solo descargar de uploaders verificados (Vips/Trusted). Ideal para encontrar versiones de DODI o FitGirl cuando sus webs principales están caídas. Usa siempre uBlock Origin.',
+        warn: 'REVISAR UPLOADER'
+    },
 ];

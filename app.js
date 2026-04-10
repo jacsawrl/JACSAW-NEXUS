@@ -595,51 +595,6 @@ function exportFavorites() {
 }
 
 // ============================================================
-// IMPORT RESOURCES  (feature 17)
-// ============================================================
-function openImportModal() {
-    document.getElementById('import-modal-overlay').classList.add('active');
-    document.body.style.overflow = 'hidden';
-}
-function closeImportModal() {
-    document.getElementById('import-modal-overlay').classList.remove('active');
-    document.body.style.overflow = '';
-    document.getElementById('import-textarea').value = '';
-}
-function showImportExample() {
-    document.getElementById('import-textarea').value = JSON.stringify([{
-        name: 'Mi Recurso', category: 'DDL', url: 'https://ejemplo.com',
-        trust: 4, tags: ['PC', 'Direct'], desc: 'Descripción breve del recurso.',
-        notes: 'Notas adicionales opcionales. Consejos, advertencias...', color: '#00D4FF', isNew: false
-    }], null, 2);
-}
-function importResources() {
-    const text = document.getElementById('import-textarea').value.trim();
-    try {
-        const parsed = JSON.parse(text);
-        if (!Array.isArray(parsed)) throw new Error('Debe ser un array JSON');
-        const valid = parsed.filter(r => r.name && r.url && r.category);
-        if (!valid.length) throw new Error('Ningún recurso válido (requieren name, url y category)');
-        const maxId = Math.max(...customResources.map(r => r.id), 999);
-        valid.forEach((r, i) => {
-            r.id    = maxId + 1 + i;
-            r.trust = Math.min(5, Math.max(1, parseInt(r.trust) || 3));
-            r.tags  = Array.isArray(r.tags) ? r.tags : [];
-            r.color = r.color || '#00D4FF';
-            r.added = r.added || new Date().toISOString().slice(0,10);
-        });
-        customResources.push(...valid);
-        saveJSON('nexus_custom', customResources);
-        closeImportModal();
-        render();
-        updateFavCount();
-        showToast(`${valid.length} recurso${valid.length!==1?'s':''} importado${valid.length!==1?'s':''}`, 'success');
-    } catch (e) {
-        showToast(`Error: ${e.message}`, 'error');
-    }
-}
-
-// ============================================================
 // ADMIN  (feature 15)
 // ============================================================
 const ADMIN_PASSWORD = 'nexus2025';
@@ -892,17 +847,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('sidebar-overlay').addEventListener('click', closeSidebar);
 
-    // Export / Import
-    document.getElementById('btn-export-fav').addEventListener('click', exportFavorites);
-    document.getElementById('btn-open-import').addEventListener('click', openImportModal);
-    document.getElementById('btn-import-example').addEventListener('click', e => { e.preventDefault(); showImportExample(); });
-    document.getElementById('import-confirm-btn').addEventListener('click', importResources);
-    document.getElementById('import-cancel-btn').addEventListener('click', closeImportModal);
-    document.getElementById('import-modal-close').addEventListener('click', closeImportModal);
-    document.getElementById('import-modal-overlay').addEventListener('click', e => {
-        if (e.target === document.getElementById('import-modal-overlay')) closeImportModal();
-    });
-
     // Detail modal
     document.getElementById('detail-modal-close').addEventListener('click', closeDetailModal);
     document.getElementById('detail-modal-overlay').addEventListener('click', e => {
@@ -920,7 +864,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.key === 't' || e.key === 'T') toggleTheme();
         }
         if (e.key === 'Escape') {
-            closeDetailModal(); closeImportModal(); closeSidebar(); hideHistory();
+            closeDetailModal(); closeSidebar(); hideHistory();
         }
         if (e.ctrlKey && e.shiftKey && e.key === 'A') { e.preventDefault();  }
     });
