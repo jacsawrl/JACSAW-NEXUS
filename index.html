@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jacsaw Nexus | El Índice Definitivo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=DM+Sans:wght@400;500&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="jacsaw-nexus.css">
+</head>
+<body>
+
+<!-- ══════════════════════ NAVBAR ══════════════════════ -->
+<nav class="navbar">
+    <a href="#" class="logo">Jacsaw Nexus</a>
+    <div class="navbar-center">
+        <div class="global-stats">
+            <span class="status-pulse"></span>
+            <span id="nav-count">INDEX_ONLINE: 0_RESOURCES</span>
+        </div>
+    </div>
+    <div class="navbar-actions">
+        <button class="nav-btn" id="btn-stats"   title="Panel de estadísticas (S)">◎ Stats</button>
+        <button class="nav-btn" id="btn-theme"   title="Cambiar tema (T)">☀</button>
+        <button class="nav-btn" id="btn-view"    title="Cambiar vista (V)">▤</button>
+        <button class="nav-btn nav-btn--admin" id="btn-admin" title="Panel de administración (Ctrl+Shift+A)">⚙</button>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Abrir filtros">☰</button>
+    </div>
+</nav>
+
+<!-- ══════════════════════ STATS PANEL ══════════════════════ -->
+<div class="stats-panel" id="stats-panel">
+    <div class="stats-panel-inner">
+        <div class="stats-summary">
+            <div class="stat-card">
+                <span class="stat-num" id="stat-total">0</span>
+                <span class="stat-label">RECURSOS</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-num" id="stat-avg">0.0</span>
+                <span class="stat-label">CONFIANZA MEDIA</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-num" id="stat-cats">0</span>
+                <span class="stat-label">CATEGORÍAS</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-num" id="stat-new">0</span>
+                <span class="stat-label">NUEVOS</span>
+            </div>
+        </div>
+        <div class="stats-distributions">
+            <div class="stats-section">
+                <h4 class="stats-section-title">POR CATEGORÍA</h4>
+                <div id="stats-by-cat"></div>
+            </div>
+            <div class="stats-section">
+                <h4 class="stats-section-title">DISTRIBUCIÓN DE CONFIANZA</h4>
+                <div id="stats-by-trust"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════ MAIN LAYOUT ══════════════════════ -->
+<div class="app-container">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+
+        <!-- Categories -->
+        <span class="filter-title">Filtrar por Vertical</span>
+        <div id="filter-container">
+            <div class="category-chip active" data-cat="ALL" onclick="filterByCategory('ALL')">
+                <span>⊞</span> TODOS
+            </div>
+            <div class="category-chip fav-chip" data-cat="FAVORITES" onclick="filterByCategory('FAVORITES')">
+                <span>★</span> FAVORITOS
+                <span class="fav-count" id="sidebar-fav-count"></span>
+            </div>
+        </div>
+
+        <!-- Trust filter -->
+        <div class="sidebar-section">
+            <span class="filter-title">Nivel de Confianza</span>
+            <div class="trust-filter-group" id="trust-filter-group">
+                <button class="trust-filter-btn active" data-trust="ALL">Todos</button>
+                <button class="trust-filter-btn" data-trust="SAFE">Seguros (3+)</button>
+                <button class="trust-filter-btn" data-trust="VERIFIED">Verificados (4+)</button>
+            </div>
+        </div>
+
+        <!-- Export -->
+        <div class="sidebar-section">
+            <span class="filter-title">Favoritos</span>
+            <button class="sidebar-action-btn" id="btn-export-fav">↓ Exportar favoritos</button>
+        </div>
+
+        <!-- Import -->
+        <div class="sidebar-section">
+            <span class="filter-title">Recursos personalizados</span>
+            <button class="sidebar-action-btn" id="btn-open-import">↑ Importar recursos</button>
+        </div>
+
+        <!-- Info -->
+        <div class="sidebar-section">
+            <span class="filter-title">Información</span>
+            <p class="sidebar-info">NEXUS HUB es un índice de curación. No alojamos archivos. Los enlaces son externos y bajo tu responsabilidad.</p>
+            <p class="sidebar-info sidebar-hint">/ → buscar &nbsp;·&nbsp; S → stats &nbsp;·&nbsp; V → vista<br>Ctrl+Shift+A → admin</p>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <div class="search-wrapper">
+            <div class="search-row">
+                <div class="search-input-wrap">
+                    <input type="text" id="main-search" class="search-input" autocomplete="off"
+                           placeholder="Buscar nombre, categoría, plataforma, descripción… (tecla /)">
+                    <button class="clear-search" id="clear-search" aria-label="Limpiar" style="display:none">✕</button>
+                    <div class="search-history" id="search-history"></div>
+                </div>
+                <button class="share-btn" id="btn-share" title="Compartir filtro actual">⎘ Compartir</button>
+                <select class="sort-select" id="sort-select">
+                    <option value="DEFAULT">Orden original</option>
+                    <option value="TRUST_DESC">Mayor confianza</option>
+                    <option value="TRUST_ASC">Menor confianza</option>
+                    <option value="NAME_ASC">Nombre A → Z</option>
+                    <option value="NAME_DESC">Nombre Z → A</option>
+                </select>
+            </div>
+            <div class="result-info" id="result-info" aria-live="polite"></div>
+        </div>
+
+        <div id="resource-grid" class="resource-grid"></div>
+    </main>
+</div>
+
+<!-- Overlay móvil -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- ══════════════════════ DETAIL MODAL ══════════════════════ -->
+<div class="modal-overlay" id="detail-modal-overlay">
+    <div class="modal detail-modal" id="detail-modal">
+        <button class="modal-close" id="detail-modal-close">✕</button>
+        <div id="detail-modal-content"></div>
+    </div>
+</div>
+
+<!-- ══════════════════════ IMPORT MODAL ══════════════════════ -->
+<div class="modal-overlay" id="import-modal-overlay">
+    <div class="modal import-modal">
+        <button class="modal-close" id="import-modal-close">✕</button>
+        <h2 class="modal-title">Importar Recursos</h2>
+        <p class="modal-subtitle">Pega un array JSON con tus recursos personalizados.
+            <button class="link-btn" id="btn-import-example">Ver ejemplo</button>
+        </p>
+        <textarea id="import-textarea" class="import-textarea"
+            placeholder='[{"name":"Mi Recurso","category":"DDL","url":"https://...","trust":4,"tags":["PC"],"desc":"Descripción."}]'></textarea>
+        <div class="modal-actions">
+            <button class="btn-secondary" id="import-cancel-btn">Cancelar</button>
+            <button class="btn-primary" id="import-confirm-btn">↑ Importar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════ ADMIN MODAL ══════════════════════ -->
+<div class="modal-overlay" id="admin-modal-overlay">
+    <div class="modal admin-modal">
+        <div class="admin-header">
+            <span class="admin-title">⚙ NEXUS ADMIN</span>
+            <button class="modal-close" id="admin-modal-close">✕</button>
+        </div>
+
+        <!-- Login -->
+        <div id="admin-login">
+            <p class="modal-subtitle">Introduce la contraseña de administrador para continuar.</p>
+            <input type="password" id="admin-password-input" class="form-input" placeholder="Contraseña...">
+            <div class="modal-actions" style="margin-top:1rem">
+                <button class="btn-secondary" id="admin-cancel-btn">Cancelar</button>
+                <button class="btn-primary" id="admin-login-btn">Acceder</button>
+            </div>
+            <p class="admin-hint">HINT: nexus2025</p>
+        </div>
+
+        <!-- Panel (visible tras auth) -->
+        <div id="admin-content" style="display:none">
+            <div class="admin-toolbar">
+                <button class="btn-primary" id="admin-add-btn">+ Añadir Recurso</button>
+                <button class="btn-secondary" id="admin-restore-btn">↺ Restaurar ocultos</button>
+            </div>
+            <div id="admin-resource-list"></div>
+
+            <!-- Resource Form -->
+            <div id="resource-form-container" style="display:none" class="resource-form">
+                <h3 id="form-title" class="form-section-title">Añadir Recurso</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Nombre *</label>
+                        <input type="text" id="f-name" class="form-input" placeholder="FitGirl Repacks">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Categoría *</label>
+                        <input type="text" id="f-category" class="form-input" list="cat-suggestions" placeholder="DDL">
+                        <datalist id="cat-suggestions"></datalist>
+                    </div>
+                    <div class="form-group form-group--full">
+                        <label class="form-label">URL *</label>
+                        <input type="url" id="f-url" class="form-input" placeholder="https://...">
+                    </div>
+                    <div class="form-group form-group--full">
+                        <label class="form-label">Descripción corta *</label>
+                        <input type="text" id="f-desc" class="form-input" placeholder="Breve descripción del recurso.">
+                    </div>
+                    <div class="form-group form-group--full">
+                        <label class="form-label">Notas extendidas</label>
+                        <textarea id="f-notes" class="form-input form-textarea" placeholder="Consejos, advertencias, requisitos..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tags (separados por comas)</label>
+                        <input type="text" id="f-tags" class="form-input" placeholder="PC, Torrent, Switch">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confianza (1–5)</label>
+                        <input type="number" id="f-trust" class="form-input" min="1" max="5" value="3">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Color acento</label>
+                        <input type="color" id="f-color" class="form-input form-color" value="#00D4FF">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Etiqueta de aviso</label>
+                        <input type="text" id="f-warn" class="form-input" placeholder="RIESGO / PELIGRO (opcional)">
+                    </div>
+                    <div class="form-group form-group--check">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="f-isnew"> Marcar como Nuevo
+                        </label>
+                    </div>
+                </div>
+                <input type="hidden" id="f-editing-id">
+                <div class="modal-actions" style="margin-top:1.5rem">
+                    <button class="btn-secondary" id="form-cancel-btn">Cancelar</button>
+                    <button class="btn-primary" id="form-save-btn">Guardar recurso</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════ TOAST ══════════════════════ -->
+<div id="toast-container" class="toast-container"></div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
