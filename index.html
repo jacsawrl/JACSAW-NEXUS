@@ -22,7 +22,6 @@
         <button class="nav-btn" id="btn-stats"   title="Panel de estadísticas (S)">◎ Stats</button>
         <button class="nav-btn" id="btn-theme"   title="Cambiar tema (T)">☀</button>
         <button class="nav-btn" id="btn-view"    title="Cambiar vista (V)">▤</button>
-        <button class="nav-btn nav-btn--admin" id="btn-admin" title="Panel de administración (Ctrl+Shift+A)">⚙</button>
         <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Abrir filtros">☰</button>
     </div>
 </nav>
@@ -105,7 +104,7 @@
         <div class="sidebar-section">
             <span class="filter-title">Información</span>
             <p class="sidebar-info">NEXUS HUB es un índice de curación. No alojamos archivos. Los enlaces son externos y bajo tu responsabilidad.</p>
-            <p class="sidebar-info sidebar-hint">/ → buscar &nbsp;·&nbsp; S → stats &nbsp;·&nbsp; V → vista<br>Ctrl+Shift+A → admin</p>
+            <p class="sidebar-info sidebar-hint">/ → buscar &nbsp;·&nbsp; S → stats &nbsp;·&nbsp; V → vista<br></p>
         </div>
     </aside>
 
@@ -159,90 +158,6 @@
         <div class="modal-actions">
             <button class="btn-secondary" id="import-cancel-btn">Cancelar</button>
             <button class="btn-primary" id="import-confirm-btn">↑ Importar</button>
-        </div>
-    </div>
-</div>
-
-<!-- ══════════════════════ ADMIN MODAL ══════════════════════ -->
-<div class="modal-overlay" id="admin-modal-overlay">
-    <div class="modal admin-modal">
-        <div class="admin-header">
-            <span class="admin-title">⚙ NEXUS ADMIN</span>
-            <button class="modal-close" id="admin-modal-close">✕</button>
-        </div>
-
-        <!-- Login -->
-        <div id="admin-login">
-            <p class="modal-subtitle">Introduce la contraseña de administrador para continuar.</p>
-            <input type="password" id="admin-password-input" class="form-input" placeholder="Contraseña...">
-            <div class="modal-actions" style="margin-top:1rem">
-                <button class="btn-secondary" id="admin-cancel-btn">Cancelar</button>
-                <button class="btn-primary" id="admin-login-btn">Acceder</button>
-            </div>
-            <p class="admin-hint">HINT: nexus2025</p>
-        </div>
-
-        <!-- Panel (visible tras auth) -->
-        <div id="admin-content" style="display:none">
-            <div class="admin-toolbar">
-                <button class="btn-primary" id="admin-add-btn">+ Añadir Recurso</button>
-                <button class="btn-secondary" id="admin-restore-btn">↺ Restaurar ocultos</button>
-            </div>
-            <div id="admin-resource-list"></div>
-
-            <!-- Resource Form -->
-            <div id="resource-form-container" style="display:none" class="resource-form">
-                <h3 id="form-title" class="form-section-title">Añadir Recurso</h3>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label class="form-label">Nombre *</label>
-                        <input type="text" id="f-name" class="form-input" placeholder="FitGirl Repacks">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Categoría *</label>
-                        <input type="text" id="f-category" class="form-input" list="cat-suggestions" placeholder="DDL">
-                        <datalist id="cat-suggestions"></datalist>
-                    </div>
-                    <div class="form-group form-group--full">
-                        <label class="form-label">URL *</label>
-                        <input type="url" id="f-url" class="form-input" placeholder="https://...">
-                    </div>
-                    <div class="form-group form-group--full">
-                        <label class="form-label">Descripción corta *</label>
-                        <input type="text" id="f-desc" class="form-input" placeholder="Breve descripción del recurso.">
-                    </div>
-                    <div class="form-group form-group--full">
-                        <label class="form-label">Notas extendidas</label>
-                        <textarea id="f-notes" class="form-input form-textarea" placeholder="Consejos, advertencias, requisitos..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Tags (separados por comas)</label>
-                        <input type="text" id="f-tags" class="form-input" placeholder="PC, Torrent, Switch">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Confianza (1–5)</label>
-                        <input type="number" id="f-trust" class="form-input" min="1" max="5" value="3">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Color acento</label>
-                        <input type="color" id="f-color" class="form-input form-color" value="#00D4FF">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Etiqueta de aviso</label>
-                        <input type="text" id="f-warn" class="form-input" placeholder="RIESGO / PELIGRO (opcional)">
-                    </div>
-                    <div class="form-group form-group--check">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="f-isnew"> Marcar como Nuevo
-                        </label>
-                    </div>
-                </div>
-                <input type="hidden" id="f-editing-id">
-                <div class="modal-actions" style="margin-top:1.5rem">
-                    <button class="btn-secondary" id="form-cancel-btn">Cancelar</button>
-                    <button class="btn-primary" id="form-save-btn">Guardar recurso</button>
-                </div>
-            </div>
         </div>
     </div>
 </div>
