@@ -1,5 +1,5 @@
 // =============================================
-// NEXUS HUB — data.js  |  25 recursos curados
+// JACSAW NEXUS HUB — data.js  |  25 recursos curados
 // =============================================
 const NEXUS_DATA_DEFAULT = [
     {
