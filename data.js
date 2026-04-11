@@ -172,11 +172,11 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 22, name: 'Optijuegos', category: 'SCENE',
-        url: 'https://optijuegos.net/legacy', trust: 2,
+        url: 'https://optijuegos.net/legacy', trust: 4,
         tags: ['Legacy', 'ES'], color: '#4A5A6E',
         isNew: false, added: '2026-04-08',
-        desc: 'Archivos antiguos y juegos livianos.',
-        notes: 'Archivo histórico de la comunidad española. Muchos títulos clásicos de PC y juegos de bajos requisitos de la era 2000-2010. Útil exclusivamente como archivo para encontrar joyas antiguas.'
+        desc: 'Juegos livianos para PCs antiguos.',
+        notes: 'Sitio perfecto para encontrar juegos recortados para poder jugarlos en pcs de bajos recursos, sitio reconocido en habla hispana.'
     },
     {
         id: 23, name: 'SwitchRom', category: 'EMULACIÓN',
