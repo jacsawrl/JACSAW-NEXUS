@@ -4,7 +4,7 @@
 const NEXUS_DATA_DEFAULT = [
     {
         id: 1, name: 'FitGirl Repacks', category: 'REPACKERS',
-        url: 'https://fitgirl-repacks.site', trust: 5,
+        url: 'https://adfly.site/FitGirl', trust: 5,
         tags: ['PC', 'Lossless'], color: '#7C3AED',
         isNew: false, added: '2026-04-08',
         desc: 'Compresión extrema. El sitio más seguro para repacks de PC.',
@@ -12,7 +12,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 2, name: 'DODI Repacks', category: 'REPACKERS',
-        url: 'https://dodi-repacks.site/', trust: 5,
+        url: 'https://adfly.site/Dodi', trust: 5,
         tags: ['PC', 'Fast-Install'], color: '#7C3AED',
         isNew: false, added: '2026-04-08',
         desc: 'Excelente balance entre velocidad y tamaño.',
@@ -20,7 +20,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 3, name: 'El Amigos', category: 'REPACKERS',
-        url: 'https://www.elamigosweb.com/', trust: 4,
+        url: 'https://adfly.site/ElAmigos', trust: 4,
         tags: ['PC', 'ES/EN'], color: '#7C3AED',
         isNew: false, added: '2026-04-08',
         desc: 'Referente hispano. Instaladores sencillos y directos.',
@@ -28,7 +28,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 4, name: 'KaosKrew', category: 'REPACKERS',
-        url: 'https://kaoskrew.org/viewforum.php?f=13', trust: 4,
+        url: 'https://adfly.site/KaosKrew', trust: 4,
         tags: ['PC', 'Classic'], color: '#7C3AED',
         isNew: false, added: '2026-04-08',
         desc: 'Grupo histórico de la scene. Repacks limpios.',
@@ -36,7 +36,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 5, name: 'SteamRip', category: 'PRE-INSTALADOS',
-        url: 'https://steamrip.com/', trust: 4,
+        url: 'https://adfly.site/SteamRip', trust: 4,
         tags: ['PC', 'No-Install'], color: '#00D4FF',
         isNew: false, added: '2026-04-08',
         desc: 'Descarga directa, extraer y jugar. Muy seguro.',
@@ -44,7 +44,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 6, name: 'IGG Games', category: 'JUEGOS PC',
-        url: 'https://igg-games.com/', trust: 2,
+        url: 'https://adfly.site/IGG', trust: 2,
         tags: ['PC', 'Ads+'], color: '#00D4FF',
         isNew: false, added: '2026-04-08', warn: 'RIESGO',
         desc: 'Catálogo inmenso. Publicidad agresiva. Usa uBlock.',
@@ -52,7 +52,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 7, name: 'Game3rb', category: 'JUEGOS PC',
-        url: 'https://game3rb.com/', trust: 3,
+        url: 'https://adfly.site/Game3RB', trust: 3,
         tags: ['PC', 'Online-Fix'], color: '#00D4FF',
         isNew: false, added: '2026-04-08',
         desc: 'Especialistas en juegos con multijugador fix.',
@@ -60,7 +60,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 8, name: 'GameBRB', category: 'JUEGOS PC',
-        url: 'https://gamebrb.com/', trust: 3,
+        url: 'https://adfly.site/GameBRB', trust: 3,
         tags: ['PC', 'Direct'], color: '#00D4FF',
         isNew: false, added: '2026-04-08',
         desc: 'Sitio de descargas directas con múltiples espejos.',
@@ -68,7 +68,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 9, name: 'OVA Games', category: 'JUEGOS PC',
-        url: 'https://www.ovagames.com/', trust: 4,
+        url: 'https://adfly.site/OvaGames', trust: 4,
         tags: ['PC', 'Mediafire'], color: '#00D4FF',
         isNew: false, added: '2026-04-08',
         desc: 'Descargas rápidas con mirrors de alta calidad.',
@@ -76,7 +76,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 10, name: 'PC Games Torrents', category: 'TORRENTS',
-        url: 'https://pcgamestorrents.com/', trust: 3,
+        url: 'https://adfly.site/PCGamesTorrents', trust: 3,
         tags: ['Torrent', 'PC'], color: '#00D4FF',
         isNew: false, added: '2026-04-08',
         desc: 'Indexador enfocado exclusivamente en torrents.',
@@ -84,7 +84,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 11, name: 'SmallGames', category: 'INDIE',
-        url: 'https://smallgames.ws/', trust: 3,
+        url: 'https://adfly.site/SmallGames', trust: 3,
         tags: ['PC', 'Indie', 'RU'], color: '#00D4FF',
         isNew: false, added: '2026-04-08',
         desc: 'Tesoro oculto para juegos indie y rusos raros.',
@@ -92,7 +92,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 12, name: 'GOG-Games', category: 'GOG-FREE',
-        url: 'https://gog-games.to/', trust: 5,
+        url: 'https://adfly.site/GoGGames', trust: 5,
         tags: ['GOG', 'DRM-Free'], color: '#6041A3',
         isNew: false, added: '2026-04-08',
         desc: 'Instaladores originales de GOG sin modificaciones.',
@@ -100,7 +100,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 13, name: 'FreeGOGPCGames', category: 'GOG-FREE',
-        url: 'https://freegogpcgames.com/', trust: 3,
+        url: 'https://adfly.site/FreeGoGGames', trust: 3,
         tags: ['DRM-Free'], color: '#6041A3',
         isNew: false, added: '2026-04-08',
         desc: 'Alternativa para juegos sin DRM de GOG.',
@@ -108,7 +108,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 14, name: 'Online-Fix', category: 'ONLINE FIXES',
-        url: 'https://online-fix.me/', trust: 5,
+        url: 'https://adfly.site/OnlineFix', trust: 5,
         tags: ['Multiplayer', 'Fix'], color: '#EF4444',
         isNew: false, added: '2026-04-08',
         desc: 'La fuente #1 para jugar pirata con amigos online.',
@@ -116,7 +116,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 15, name: 'CS.RIN.RU', category: 'SCENE',
-        url: 'https://cs.rin.ru/', trust: 5,
+        url: 'https://adfly.site/CS_RIN_RU', trust: 5,
         tags: ['Forum', 'Tools'], color: '#10B981',
         isNew: false, added: '2026-04-08',
         desc: 'La biblia del gaming underground. Conocimiento puro.',
@@ -124,7 +124,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 16, name: "Vimm's Lair", category: 'EMULACIÓN',
-        url: 'https://vimm.net/', trust: 5,
+        url: 'https://adfly.site/VimmsLair', trust: 5,
         tags: ['Retro', 'ROMs'], color: '#F59E0B',
         isNew: false, added: '2026-04-08',
         desc: 'El refugio más seguro para consolas clásicas.',
@@ -132,7 +132,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 17, name: 'NXBrew', category: 'EMULACIÓN',
-        url: 'https://nxbrew.me/', trust: 4,
+        url: 'https://adfly.site/NXBrew', trust: 4,
         tags: ['Switch', 'NSP'], color: '#F59E0B',
         isNew: false, added: '2026-04-08',
         desc: 'Todo para la híbrida de Nintendo. NSP y XCI.',
@@ -140,7 +140,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 18, name: 'NSW2U', category: 'EMULACIÓN',
-        url: 'https://nsw2u.click/', trust: 4,
+        url: 'https://adfly.site/NSW2u', trust: 4,
         tags: ['Switch', '3DS'], color: '#F59E0B',
         isNew: false, added: '2026-04-08',
         desc: 'Actualizaciones, DLCs y ROMs de consolas Nintendo.',
@@ -148,7 +148,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 19, name: 'LinuxRulez', category: 'LINUX',
-        url: 'https://rentry.co/LinuxRulez', trust: 5,
+        url: 'https://adfly.site/LinuxRulez', trust: 5,
         tags: ['Linux', 'SteamDeck'], color: '#EC4899',
         isNew: false, added: '2026-04-08',
         desc: 'Scripts optimizados para jugar en Linux y Steam Deck.',
@@ -156,13 +156,13 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 20, name: 'SkidrowReloaded', category: 'SCENE',
-        url: 'https://www.skidrowreloaded.com/', trust: 1,
+        url: 'https://adfly.site/Skidowreloaded', trust: 1,
         tags: ['Fake-Name', 'Risky'], color: '#4A5A6E',
         isNew: false, added: '2026-04-08', warn: 'PELIGRO',
         desc: 'Sitio que usa nombres de la scene. Solo expertos.',
         notes: 'ADVERTENCIA CRÍTICA: Este sitio NO está afiliado al grupo real Skidrow ni Reloaded. Historial documentado de archivos con adware. Solo para usuarios avanzados que sepan analizar ejecutables.'
     },
-    {
+    { //--------------------------------------------------------------------------------------------------------------------------------------------------
         id: 21, name: 'NintendoProject', category: 'EMULACIÓN',
         url: 'https://nintendoproject.com/', trust: 5,
         tags: ['Nintendo', 'Emulador'], color: '#F59E0B',
