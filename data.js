@@ -1,5 +1,5 @@
 // =============================================
-// JACSAW NEXUS HUB — data.js  |  25 recursos curados
+// JACSAW NEXUS HUB — data.js
 // =============================================
 const NEXUS_DATA_DEFAULT = [
     {
@@ -220,16 +220,8 @@ const NEXUS_DATA_DEFAULT = [
         notes: 'Extremadamente confiable para formatos .NSP, .CIA y .VPK. Organizado por partes en servidores como 1Fichier y Zippyshare (mirrors). Obligatorio usar bloqueador de anuncios.'
     },
     {
-        id: 30, name: 'Linux-Quack', category: 'LINUX',
-        url: 'https://linux-quack.io/', trust: 5,
-        tags: ['SteamDeck', 'Flatpak', 'Native'], color: '#EC4899',
-        isNew: true, added: '2026-04-10',
-        desc: 'Scripts y binarios optimizados nativamente para SteamOS.',
-        notes: 'Especialmente diseñado para usuarios de Steam Deck. Ofrecen instaladores en formato Flatpak que configuran automáticamente Wine y Proton sin tocar la terminal.'
-    },
-    {
-        id: 32, name: '1337x (Games Section)', category: 'TORRENTS',
-        url: 'https://1337x.to/popular-games', trust: 5,
+        id: 28, name: '1337x (Games Section)', category: 'TORRENTS',
+        url: 'https://1337x.to/cat/Games/1/', trust: 5,
         tags: ['Multi-System', 'Scene', 'Repacks'], color: '#EF4444',
         isNew: true, added: '2026-04-10',
         desc: 'El buscador de torrents más activo y organizado actualmente.',
