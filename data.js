@@ -164,7 +164,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     { //--------------------------------------------------------------------------------------------------------------------------------------------------
         id: 21, name: 'NintendoProject', category: 'EMULACIÓN',
-        url: 'https://nintendoproject.com/', trust: 5,
+        url: 'https://adfly.site/NintendoProject', trust: 5,
         tags: ['Nintendo', 'Emulador'], color: '#F59E0B',
         isNew: true, added: '2026-04-10', warn: 'DE PAGO',
         desc: 'Sitio con muchos emuladores y librería de juegos rápida.',
@@ -172,7 +172,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 22, name: 'Optijuegos', category: 'SCENE',
-        url: 'https://optijuegos.net/legacy', trust: 4,
+        url: 'https://adfly.site/OptiJuegos', trust: 4,
         tags: ['Legacy', 'ES'], color: '#4A5A6E',
         isNew: false, added: '2026-04-08',
         desc: 'Juegos livianos para PCs antiguos.',
@@ -180,7 +180,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 23, name: 'SwitchRom', category: 'EMULACIÓN',
-        url: 'https://switchrom.net/', trust: 4,
+        url: 'https://adfly.site/SwitchRom', trust: 4,
         tags: ['Switch', 'Direct-Download'], color: '#F59E0B',
         isNew: true, added: '2026-04-10',
         desc: 'Catálogo extenso enfocado exclusivamente en Nintendo Switch.',
@@ -188,7 +188,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 24, name: 'RomsFun', category: 'EMULACIÓN',
-        url: 'https://romsfun.com/', trust: 5,
+        url: 'https://adfly.site/RomsFun', trust: 5,
         tags: ['Multi-System', 'Retro', 'Direct-Download'],
         color: '#F59E0B', 
         isNew: true, added: '2026-04-10',
@@ -197,7 +197,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 25, name: 'PiviGames', category: 'REPACKERS',
-        url: 'https://pivigames.blog/', trust: 5,
+        url: 'https://adfly.site/PiviGames', trust: 5,
         tags: ['PC', 'Updates', 'Online-Fix'], color: '#7C3AED',
         isNew: false, added: '2026-04-10',
         desc: 'La mayor comunidad hispana de juegos de PC y actualizaciones.',
@@ -205,7 +205,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 26, name: 'TinyRepacks', category: 'REPACKERS',
-        url: 'https://tiny-repacks.win/', trust: 5,
+        url: 'https://adfly.site/TinyRepacks', trust: 5,
         tags: ['PC', 'Ultra-Small'], color: '#7C3AED',
         isNew: true, added: '2026-04-10',
         desc: 'Especialistas en repacks de tamaño mínimo para conexiones lentas.',
@@ -213,7 +213,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 27, name: 'Ziperto', category: 'EMULACIÓN',
-        url: 'https://www.ziperto.com/', trust: 4,
+        url: 'https://adfly.site/Ziperto', trust: 4,
         tags: ['Switch', '3DS', 'PS Vita'], color: '#F59E0B',
         isNew: true, added: '2026-04-10',
         desc: 'Líder en ROMs de consolas portátiles y actualizaciones.',
@@ -221,7 +221,7 @@ const NEXUS_DATA_DEFAULT = [
     },
     {
         id: 28, name: '1337x (Games Section)', category: 'TORRENTS',
-        url: 'https://1337x.to/cat/Games/1/', trust: 5,
+        url: 'https://adfly.site/1337X', trust: 5,
         tags: ['Multi-System', 'Scene', 'Repacks'], color: '#EF4444',
         isNew: true, added: '2026-04-10',
         desc: 'El buscador de torrents más activo y organizado actualmente.',
