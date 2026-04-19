@@ -19,11 +19,17 @@
         </div>
     </div>
     <div class="navbar-actions">
-        <a href="tutoriales.html" class="nav-btn" style="text-decoration: none; display: flex; align-items: center;">📖 Tutoriales</a>
-    
+        <a href="tutoriales.html" class="nav-btn" style="text-decoration:none;display:flex;align-items:center;">📖 Tutoriales</a>
+        <a href="forum.html" class="nav-btn" style="text-decoration:none;display:flex;align-items:center;">💬 Foro</a>
         <button class="nav-btn" id="btn-stats" title="Panel de estadísticas (S)">◎ Stats</button>
-        <button class="nav-btn" id="btn-theme"   title="Cambiar tema (T)">☀</button>
-        <button class="nav-btn" id="btn-view"    title="Cambiar vista (V)">▤</button>
+        <button class="nav-btn" id="btn-theme" title="Cambiar tema (T)">☀</button>
+        <button class="nav-btn" id="btn-view"  title="Cambiar vista (V)">▤</button>
+        <!-- Profile button — hidden until logged in -->
+        <button class="nav-btn nav-btn--profile" id="btn-profile" title="Mi perfil" style="display:none">⊛ Perfil</button>
+        <button class="nav-btn nav-btn--auth" id="btn-auth" title="Iniciar sesión">⊙ Login</button>
+        <img id="auth-avatar" src="" alt="avatar"
+             style="display:none;width:26px;height:26px;border-radius:50%;object-fit:cover;margin-left:2px;vertical-align:middle;cursor:pointer;"
+             title="Ver perfil">
         <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Abrir filtros">☰</button>
     </div>
 </nav>
@@ -67,8 +73,6 @@
 
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
-
-        <!-- Categories -->
         <span class="filter-title">Filtrar por Vertical</span>
         <div id="filter-container">
             <div class="category-chip active" data-cat="ALL" onclick="filterByCategory('ALL')">
@@ -80,7 +84,6 @@
             </div>
         </div>
 
-        <!-- Trust filter -->
         <div class="sidebar-section">
             <span class="filter-title">Nivel de Confianza</span>
             <div class="trust-filter-group" id="trust-filter-group">
@@ -90,12 +93,10 @@
             </div>
         </div>
 
-        
-        <!-- Info -->
         <div class="sidebar-section">
             <span class="filter-title">Información</span>
             <p class="sidebar-info">JACSAW NEXUS es un índice de curación. No alojamos archivos. Los enlaces son externos y bajo tu responsabilidad.</p>
-            <p class="sidebar-info sidebar-hint">/ → buscar &nbsp;·&nbsp; S → stats &nbsp;·&nbsp; V → vista<br></p>
+            <p class="sidebar-info sidebar-hint">/ → buscar &nbsp;·&nbsp; S → stats &nbsp;·&nbsp; V → vista</p>
         </div>
     </aside>
 
@@ -112,6 +113,7 @@
                 <button class="share-btn" id="btn-share" title="Compartir filtro actual">⎘ Compartir</button>
                 <select class="sort-select" id="sort-select">
                     <option value="DEFAULT">Orden original</option>
+                    <option value="POPULAR">🔥 Más popular</option>
                     <option value="TRUST_DESC">Mayor confianza</option>
                     <option value="TRUST_ASC">Menor confianza</option>
                     <option value="NAME_ASC">Nombre A → Z</option>
@@ -136,10 +138,62 @@
     </div>
 </div>
 
+<!-- ══════════════════════ PROFILE MODAL ══════════════════════ -->
+<div class="modal-overlay" id="profile-modal-overlay">
+    <div class="modal profile-modal">
+        <button class="modal-close" id="profile-modal-close">✕</button>
+        <div class="profile-modal-inner">
+            <div class="profile-header">
+                <img id="profile-avatar-img" src="" alt="avatar" style="display:none;width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--border)">
+                <div>
+                    <h3 class="profile-title">Mi Perfil</h3>
+                    <p class="profile-meta" id="profile-email" style="font-size:0.75rem;color:var(--text-tertiary);margin:0"></p>
+                    <p class="profile-meta" style="font-size:0.65rem;color:var(--text-tertiary);margin:0;font-family:var(--font-mono)">uid: <span id="profile-uid"></span></p>
+                </div>
+            </div>
+
+            <div class="profile-form">
+                <div class="profile-field">
+                    <label class="profile-label" for="profile-name-input">Nombre público <span style="color:var(--danger)">*</span></label>
+                    <input type="text" id="profile-name-input" class="profile-input"
+                           maxlength="32" placeholder="Tu nombre o alias"
+                           autocomplete="off" spellcheck="false">
+                    <span class="profile-hint">Máx. 32 caracteres. Se muestra en el índice.</span>
+                </div>
+                <div class="profile-field">
+                    <label class="profile-label" for="profile-bio-input">Bio</label>
+                    <textarea id="profile-bio-input" class="profile-input profile-textarea"
+                              maxlength="160" rows="3"
+                              placeholder="Cuéntanos algo (opcional)…"></textarea>
+                    <span class="profile-hint">Máx. 160 caracteres.</span>
+                </div>
+            </div>
+
+            <div class="profile-actions">
+                <button class="profile-cancel-btn" onclick="closeProfileModal()">Cancelar</button>
+                <button class="profile-save-btn" id="profile-save-btn">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ══════════════════════ TOAST ══════════════════════ -->
 <div id="toast-container" class="toast-container"></div>
 
-<script src="data.js"></script>
-<script src="app.js"></script>
+<!-- ══════════════════════ ALERT MODAL ══════════════════════ -->
+<div class="modal-overlay" id="alert-modal-overlay">
+    <div class="modal alert-modal">
+        <div class="alert-modal-content">
+            <p id="alert-message"></p>
+            <div class="alert-buttons">
+                <button id="alert-ok-btn">OK</button>
+                <button id="alert-cancel-btn" style="display:none">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="_nx.js"></script>
+<script type="module" src="app.js"></script>
 </body>
 </html>

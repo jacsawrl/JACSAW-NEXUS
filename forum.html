@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foro | Jacsaw Nexus</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=DM+Sans:wght@400;500&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="jacsaw-nexus.css">
+    <style>
+        /* ── Layout ───────────────────────────── */
+        .forum-container { max-width: 1000px; margin: 80px auto; padding: 20px; }
+
+        .forum-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .forum-header h1 {
+            font-size: 2rem;
+            color: var(--accent);
+            font-family: var(--font-display);
+            margin: 0;
+        }
+
+        .forum-header-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        /* ── Search & Filters ────────────────── */
+        .forum-search-bar {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .forum-search-wrap {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .forum-search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        #forum-search {
+            width: 100%;
+            padding: 10px 12px 10px 36px;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-radius: 8px;
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        #forum-search:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        #search-result-info {
+            font-size: 0.85rem;
+            color: var(--text-tertiary);
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        /* ── Tag Cloud ────────────────────────── */
+        .tag-cloud-wrap {
+            margin-bottom: 1.25rem;
+        }
+
+        .tag-cloud-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.5rem;
+        }
+
+        #tag-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+
+        .tag-chip {
+            padding: 4px 10px;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border-radius: 20px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: var(--font-body);
+        }
+
+        .tag-chip:hover { border-color: var(--accent); color: var(--accent); }
+        .tag-chip.active { background: var(--accent); color: var(--bg-primary); border-color: var(--accent); }
+
+        .tag-count {
+            opacity: 0.7;
+            font-size: 0.7em;
+        }
+
+        /* ── Author Filter Bar ────────────────── */
+        .author-filter-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .author-filter-bar strong { color: var(--accent); }
+
+        .author-filter-bar button {
+            border: none;
+            background: transparent;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+
+        .author-filter-bar button:hover { color: var(--danger); background: var(--bg-tertiary); }
+
+        /* ── Post Items ───────────────────────── */
+        .post-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .post-item:hover {
+            border-color: var(--accent);
+            background: var(--bg-tertiary);
+            transform: translateX(4px);
+        }
+
+        .post-item-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .post-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .btn-delete-post {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: var(--text-tertiary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .btn-delete-post:hover { color: var(--danger); background: rgba(220,38,38,0.1); }
+
+        .post-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.82rem;
+            color: var(--text-tertiary);
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .post-meta-item { display: flex; align-items: center; gap: 4px; }
+
+        .post-author-link {
+            color: var(--accent);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .post-author-link:hover { text-decoration: underline; }
+
+        .post-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .post-tag {
+            padding: 2px 8px;
+            background: rgba(124,58,237,0.15);
+            color: var(--accent);
+            border-radius: 12px;
+            font-size: 0.72rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .post-tag:hover { background: rgba(124,58,237,0.3); }
+
+        .post-content {
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+            font-size: 0.92rem;
+        }
+
+        .post-stats {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.85rem;
+            color: var(--text-tertiary);
+        }
+
+        /* ── Loading ──────────────────────────── */
+        .loading-posts {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-tertiary);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-subtle);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Empty State ──────────────────────── */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-tertiary);
+        }
+        .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+        .btn-clear-filter {
+            margin-top: 1rem;
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-primary);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .btn-clear-filter:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* ── Buttons ──────────────────────────── */
+        .btn-primary {
+            padding: 10px 20px;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: var(--font-body);
+            transition: var(--transition);
+            font-size: 0.9rem;
+        }
+        .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .btn-secondary {
+            padding: 10px 20px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-family: var(--font-body);
+            transition: var(--transition);
+            font-size: 0.9rem;
+        }
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* ── Form Groups ──────────────────────── */
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 600; color: var(--text-primary); font-size: 0.9rem; }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-radius: 6px;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            resize: vertical;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus { outline: none; border-color: var(--accent); }
+        .form-group textarea { min-height: 120px; }
+        .form-group select option { background: var(--bg-primary); }
+        .form-char-hint { font-size: 0.75rem; color: var(--text-tertiary); margin-top: 4px; }
+
+        .form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.25rem; }
+
+        /* ── Modal Styles ─────────────────────── */
+        .modal-new-post { max-width: 600px; }
+        .modal-title { font-size: 1.3rem; font-weight: bold; color: var(--text-primary); margin-bottom: 1.25rem; }
+
+        /* ── Post Detail ──────────────────────── */
+        .post-detail {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .post-detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .post-detail-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .post-detail-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+
+        .btn-post-delete, .btn-post-report {
+            padding: 6px 12px;
+            border: 1px solid var(--border-subtle);
+            background: transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: var(--transition);
+            font-family: var(--font-body);
+        }
+
+        .btn-post-delete { color: var(--danger); border-color: var(--danger); }
+        .btn-post-delete:hover { background: var(--danger); color: white; }
+        .btn-post-report { color: var(--text-tertiary); }
+        .btn-post-report:hover { border-color: var(--warning); color: var(--warning); }
+
+        .post-detail-meta {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.85rem;
+            color: var(--text-tertiary);
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-subtle);
+            flex-wrap: wrap;
+        }
+
+        .post-detail-author {
+            color: var(--accent);
+            cursor: pointer;
+        }
+        .post-detail-author:hover { text-decoration: underline; }
+
+        .post-detail-content {
+            font-size: 1rem;
+            line-height: 1.75;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+        }
+
+        /* ── Comments ─────────────────────────── */
+        .comments-section { margin-top: 1.5rem; }
+        .comments-title { font-size: 1rem; font-weight: bold; color: var(--text-primary); margin-bottom: 1rem; }
+
+        .comment-item {
+            background: var(--bg-tertiary);
+            border-left: 3px solid var(--accent);
+            padding: 0.9rem 1rem;
+            margin-bottom: 0.75rem;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.4rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .comment-author {
+            font-weight: bold;
+            color: var(--accent);
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .comment-author:hover { text-decoration: underline; }
+
+        .comment-time { font-size: 0.78rem; color: var(--text-tertiary); }
+
+        .comment-content {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 0.6rem;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+        }
+
+        .comment-actions {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.82rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-like {
+            cursor: pointer;
+            color: var(--text-tertiary);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-like:hover { color: var(--warning); }
+        .btn-like.liked { color: var(--warning); font-weight: bold; }
+
+        .btn-report-comment, .btn-delete-comment {
+            cursor: pointer;
+            color: var(--text-tertiary);
+            transition: var(--transition);
+        }
+        .btn-report-comment:hover { color: var(--warning); }
+        .btn-delete-comment:hover { color: var(--danger); }
+
+        /* ── Reply Form ───────────────────────── */
+        .reply-form {
+            margin-top: 1.5rem;
+            padding: 1.25rem;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius);
+        }
+        .reply-form-title { font-weight: bold; color: var(--text-primary); margin-bottom: 0.75rem; font-size: 0.9rem; }
+        .reply-textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-radius: 6px;
+            min-height: 90px;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            box-sizing: border-box;
+            resize: vertical;
+            transition: border-color 0.2s;
+        }
+        .reply-textarea:focus { outline: none; border-color: var(--accent); }
+        .reply-actions { display: flex; gap: 0.75rem; margin-top: 0.5rem; }
+        .btn-reply-submit {
+            padding: 8px 18px;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: var(--font-body);
+            transition: var(--transition);
+        }
+        .btn-reply-submit:hover { filter: brightness(1.1); }
+        .btn-reply-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ── User Profile Modal ───────────────── */
+        .profile-modal { max-width: 500px; }
+        .profile-modal-inner, .user-profile-inner {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .profile-header { display: flex; gap: 1rem; align-items: flex-start; }
+        .profile-title { margin: 0; color: var(--text-primary); font-size: 1.1rem; }
+        .profile-meta { margin: 0; color: var(--text-tertiary); font-size: 0.82rem; }
+        .profile-form { display: flex; flex-direction: column; gap: 0.75rem; }
+        .profile-field { display: flex; flex-direction: column; gap: 0.4rem; }
+        .profile-label { font-weight: 600; color: var(--text-primary); font-size: 0.9rem; }
+        .profile-input {
+            padding: 10px 12px;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-radius: 6px;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+        .profile-input:focus { outline: none; border-color: var(--accent); }
+        .profile-textarea { resize: vertical; min-height: 80px; }
+        .profile-hint { font-size: 0.73rem; color: var(--text-tertiary); }
+        .profile-actions { display: flex; gap: 0.75rem; justify-content: flex-end; flex-wrap: wrap; }
+
+        .profile-cancel-btn, .profile-save-btn, .profile-logout-btn {
+            padding: 9px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            transition: var(--transition);
+        }
+        .profile-cancel-btn { background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-subtle); }
+        .profile-cancel-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .profile-save-btn { background: var(--accent); color: var(--bg-primary); }
+        .profile-save-btn:hover { filter: brightness(1.1); }
+        .profile-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .profile-logout-btn { background: var(--danger); color: white; }
+        .profile-logout-btn:hover { filter: brightness(1.1); }
+
+        /* ── User Stats ───────────────────────── */
+        .user-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+        }
+        .user-stat-card {
+            background: var(--bg-tertiary);
+            padding: 0.75rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .user-stat-num { font-size: 1.3rem; color: var(--accent); font-weight: bold; }
+        .user-stat-label { font-size: 0.75rem; color: var(--text-tertiary); margin-top: 4px; }
+
+        /* ── User Posts in Profile ────────────── */
+        .user-posts-section { margin-top: 0.5rem; }
+        .user-posts-title { font-weight: bold; color: var(--text-primary); margin-bottom: 0.5rem; font-size: 0.9rem; }
+        .user-post-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 0.75rem;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            margin-bottom: 0.4rem;
+            cursor: pointer;
+            transition: var(--transition);
+            gap: 0.5rem;
+        }
+        .user-post-item:hover { background: var(--bg-secondary); border-left: 2px solid var(--accent); }
+        .user-post-item-title { font-size: 0.85rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-post-item-date { font-size: 0.75rem; color: var(--text-tertiary); flex-shrink: 0; }
+
+        .user-profile-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+        .btn-view-all-posts {
+            padding: 8px 16px;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+            font-family: var(--font-body);
+            transition: var(--transition);
+        }
+        .btn-view-all-posts:hover { filter: brightness(1.1); }
+        .btn-report-user {
+            padding: 8px 16px;
+            background: transparent;
+            color: var(--text-tertiary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-family: var(--font-body);
+            transition: var(--transition);
+        }
+        .btn-report-user:hover { border-color: var(--warning); color: var(--warning); }
+
+        /* ── Report Modal ─────────────────────── */
+        .report-modal { max-width: 480px; }
+        .report-subtitle { font-size: 0.85rem; color: var(--text-tertiary); margin-bottom: 1rem; }
+
+        /* ── Suggestion Modal ─────────────────── */
+        .suggestion-modal { max-width: 560px; }
+
+        /* ── Responsive ───────────────────────── */
+        @media (max-width: 640px) {
+            .forum-header { flex-direction: column; align-items: flex-start; }
+            .forum-header-actions { width: 100%; }
+            .forum-header-actions .btn-primary,
+            .forum-header-actions .btn-secondary { flex: 1; text-align: center; }
+            .user-stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .post-detail-header { flex-direction: column; }
+            .post-detail-actions { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══════════════════════ NAVBAR ══════════════════════ -->
+<nav class="navbar">
+    <a href="index.html" class="logo">Jacsaw Nexus</a>
+    <div class="navbar-actions">
+        <a href="index.html" class="nav-btn" style="text-decoration:none;display:flex;align-items:center;">📑 Index</a>
+        <a href="tutoriales.html" class="nav-btn" style="text-decoration:none;display:flex;align-items:center;">📖 Tutoriales</a>
+        <button class="nav-btn" id="btn-theme" title="Cambiar tema (T)">☀</button>
+        <button class="nav-btn nav-btn--profile" id="btn-profile" title="Mi perfil" style="display:none">⊛ Perfil</button>
+        <button class="nav-btn nav-btn--auth" id="btn-auth" title="Iniciar sesión">⊙ Login</button>
+        <img id="auth-avatar" src="" alt="avatar"
+             style="display:none;width:26px;height:26px;border-radius:50%;object-fit:cover;margin-left:2px;vertical-align:middle;cursor:pointer;"
+             title="Ver perfil">
+    </div>
+</nav>
+
+<!-- ══════════════════════ FORUM CONTENT ══════════════════════ -->
+<div class="forum-container">
+
+    <!-- Header -->
+    <div class="forum-header">
+        <h1>💬 Foro Jacsaw</h1>
+        <div class="forum-header-actions">
+            <button class="btn-secondary" id="btn-new-suggestion" title="Enviar sugerencia al equipo">💡 Sugerir</button>
+            <button class="btn-primary" id="btn-new-post-forum" disabled>+ Nuevo Tema</button>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="forum-search-bar">
+        <div class="forum-search-wrap">
+            <span class="forum-search-icon">🔍</span>
+            <input type="text" id="forum-search" placeholder="Buscar temas, autores o contenido… (tecla /)" autocomplete="off" spellcheck="false">
+        </div>
+    </div>
+
+    <!-- Search result info -->
+    <div id="search-result-info"></div>
+
+    <!-- Tag cloud (built dynamically) -->
+    <div class="tag-cloud-wrap">
+        <div class="tag-cloud-label">Filtrar por etiqueta</div>
+        <div id="tag-cloud"></div>
+    </div>
+
+    <!-- Posts list -->
+    <div id="forum-posts">
+        <div class="loading-posts"><span class="loading-spinner"></span> Cargando temas…</div>
+    </div>
+</div>
+
+<!-- ══════════════════════ NEW POST MODAL ══════════════════════ -->
+<div class="modal-overlay" id="new-post-modal-overlay">
+    <div class="modal modal-new-post">
+        <button class="modal-close" id="new-post-close">✕</button>
+        <h2 class="modal-title">Crear Nuevo Tema</h2>
+        <div class="form-group">
+            <label for="post-title-input">Título <span style="color:var(--danger)">*</span></label>
+            <input type="text" id="post-title-input" placeholder="¿Cuál es el tema?" maxlength="200" autocomplete="off">
+            <div class="form-char-hint">Máx. 200 caracteres</div>
+        </div>
+        <div class="form-group">
+            <label for="post-content-input">Descripción <span style="color:var(--danger)">*</span></label>
+            <textarea id="post-content-input" placeholder="Cuéntanos más…" maxlength="3000"></textarea>
+            <div class="form-char-hint">Máx. 3000 caracteres</div>
+        </div>
+        <div class="form-group">
+            <label for="post-tags-input">Etiquetas <span style="color:var(--text-tertiary)">(opcional)</span></label>
+            <input type="text" id="post-tags-input" placeholder="Repack, Consola, Duda… (separadas por coma, máx. 5)" maxlength="150" autocomplete="off">
+            <div class="form-char-hint">Ayudan a filtrar y encontrar tu tema</div>
+        </div>
+        <div class="form-actions">
+            <button class="btn-secondary" id="new-post-cancel-btn">Cancelar</button>
+            <button class="btn-primary" id="btn-submit-post">Publicar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════ POST DETAIL MODAL ══════════════════════ -->
+<div class="modal-overlay" id="post-detail-modal-overlay">
+    <div class="modal" style="max-width: 800px">
+        <button class="modal-close" id="post-detail-close">✕</button>
+        <div id="post-detail-content"></div>
+    </div>
+</div>
+
+<!-- ══════════════════════ USER PROFILE MODAL ══════════════════════ -->
+<div class="modal-overlay" id="user-profile-modal-overlay">
+    <div class="modal profile-modal">
+        <button class="modal-close" id="user-profile-close">✕</button>
+        <div id="user-profile-content"></div>
+    </div>
+</div>
+
+<!-- ══════════════════════ REPORT MODAL ══════════════════════ -->
+<div class="modal-overlay" id="report-modal-overlay" data-type="" data-target-id="" data-parent-id="">
+    <div class="modal report-modal">
+        <button class="modal-close" id="report-modal-close">✕</button>
+        <h2 class="modal-title">⚑ Reportar contenido</h2>
+        <p class="report-subtitle">Los reportes son revisados por el equipo de moderación. Por favor, sé específico para que podamos actuar.</p>
+        <div class="form-group">
+            <label for="report-reason">Motivo <span style="color:var(--danger)">*</span></label>
+            <select id="report-reason">
+                <option value="">— Selecciona un motivo —</option>
+                <option value="spam">Spam o publicidad no deseada</option>
+                <option value="harassment">Acoso o conducta abusiva</option>
+                <option value="misinformation">Información falsa o engañosa</option>
+                <option value="inappropriate">Contenido inapropiado</option>
+                <option value="other">Otro</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="report-details">Detalles adicionales <span style="color:var(--text-tertiary)">(opcional)</span></label>
+            <textarea id="report-details" placeholder="Explica brevemente el problema…" maxlength="500" style="min-height:80px"></textarea>
+            <div class="form-char-hint">Máx. 500 caracteres</div>
+        </div>
+        <div class="form-actions">
+            <button class="btn-secondary" id="report-cancel-btn">Cancelar</button>
+            <button class="btn-primary" id="btn-submit-report">Enviar reporte</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════ SUGGESTION MODAL ══════════════════════ -->
+<div class="modal-overlay" id="suggestion-modal-overlay">
+    <div class="modal suggestion-modal">
+        <button class="modal-close" id="suggestion-modal-close">✕</button>
+        <h2 class="modal-title">💡 Enviar Sugerencia</h2>
+        <p class="report-subtitle">¿Tienes una idea para mejorar Jacsaw Nexus? El equipo la revisará y la valorará.</p>
+        <div class="form-group">
+            <label for="suggestion-category">Categoría <span style="color:var(--danger)">*</span></label>
+            <select id="suggestion-category">
+                <option value="">— Selecciona una categoría —</option>
+                <option value="feature">Nueva funcionalidad</option>
+                <option value="bug">Reporte de error</option>
+                <option value="content">Contenido / Recursos</option>
+                <option value="design">Diseño / UI</option>
+                <option value="other">Otro</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="suggestion-title">Título <span style="color:var(--danger)">*</span></label>
+            <input type="text" id="suggestion-title" placeholder="Describe brevemente tu sugerencia" maxlength="100" autocomplete="off">
+            <div class="form-char-hint">Máx. 100 caracteres</div>
+        </div>
+        <div class="form-group">
+            <label for="suggestion-description">Descripción detallada <span style="color:var(--danger)">*</span></label>
+            <textarea id="suggestion-description" placeholder="Explica tu idea con el máximo detalle posible…" maxlength="1000"></textarea>
+            <div class="form-char-hint">Máx. 1000 caracteres</div>
+        </div>
+        <div class="form-actions">
+            <button class="btn-secondary" id="suggestion-cancel-btn">Cancelar</button>
+            <button class="btn-primary" id="btn-submit-suggestion">Enviar sugerencia</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════ OWN PROFILE MODAL ══════════════════════ -->
+<div class="modal-overlay" id="profile-modal-overlay">
+    <div class="modal profile-modal">
+        <button class="modal-close" id="profile-modal-close">✕</button>
+        <div class="profile-modal-inner">
+            <div class="profile-header">
+                <img id="profile-avatar-img" src="" alt="avatar" style="display:none;width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--border)">
+                <div>
+                    <h3 class="profile-title">Mi Perfil</h3>
+                    <p class="profile-meta" id="profile-email" style="font-size:0.75rem;color:var(--text-tertiary);margin:0"></p>
+                    <p class="profile-meta" style="font-size:0.65rem;color:var(--text-tertiary);margin:0;font-family:var(--font-mono)">uid: <span id="profile-uid"></span></p>
+                </div>
+            </div>
+            <div class="profile-form">
+                <div class="profile-field">
+                    <label class="profile-label" for="profile-name-input">Nombre público <span style="color:var(--danger)">*</span></label>
+                    <input type="text" id="profile-name-input" class="profile-input" maxlength="32" placeholder="Tu nombre o alias" autocomplete="off" spellcheck="false">
+                    <span class="profile-hint">Máx. 32 caracteres. Se muestra en el foro.</span>
+                </div>
+                <div class="profile-field">
+                    <label class="profile-label" for="profile-bio-input">Bio</label>
+                    <textarea id="profile-bio-input" class="profile-input profile-textarea" maxlength="160" rows="3" placeholder="Cuéntanos algo (opcional)…"></textarea>
+                    <span class="profile-hint">Máx. 160 caracteres.</span>
+                </div>
+            </div>
+            <div class="profile-actions">
+                <button class="profile-cancel-btn" id="profile-cancel-btn">Cancelar</button>
+                <button class="profile-save-btn" id="profile-save-btn">Guardar</button>
+                <button class="profile-logout-btn" id="profile-logout-btn">Cerrar sesión</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════ ALERT MODAL ══════════════════════ -->
+<div class="modal-overlay" id="alert-modal-overlay">
+    <div class="modal alert-modal">
+        <div class="alert-modal-content">
+            <p id="alert-message"></p>
+            <div class="alert-buttons">
+                <button id="alert-ok-btn">OK</button>
+                <button id="alert-cancel-btn" style="display:none">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════ TOAST ══════════════════════ -->
+<div id="toast-container" class="toast-container"></div>
+
+<script src="_nx.js"></script>
+<script src="forum.js"></script>
+
+<!-- Inline cancel buttons that forum.js doesn't cover directly -->
+<script>
+    document.getElementById('new-post-cancel-btn')?.addEventListener('click', () => closeNewPostModal());
+    document.getElementById('report-cancel-btn')?.addEventListener('click', () => closeReportModal());
+    document.getElementById('suggestion-cancel-btn')?.addEventListener('click', () => closeSuggestionModal());
+    document.getElementById('profile-cancel-btn')?.addEventListener('click', () => closeProfileModal());
+</script>
+</body>
+</html>

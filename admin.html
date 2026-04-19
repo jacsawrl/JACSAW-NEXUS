@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Jacsaw Nexus</title>
+    <link rel="stylesheet" href="jacsaw-nexus.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body { font-family: 'DM Sans', sans-serif; background: #111; color: #e0e0e0; margin: 0; }
+
+        .admin-panel { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+        /* ── Header ── */
+        .admin-header {
+            background: #1a1a1a;
+            padding: 20px 24px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            border: 1px solid #2a2a2a;
+        }
+
+        .admin-header h1 { margin: 0; font-size: 1.5rem; color: #7C3AED; }
+        .admin-header-right { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+        /* ── Stats ── */
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #1a1a1a;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #2a2a2a;
+        }
+        .stat-card h3 { margin: 0 0 8px; font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
+        .stat-card div { font-size: 1.6rem; font-weight: bold; color: #7C3AED; }
+
+        /* ── Tabs ── */
+        .admin-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 0;
+            border-bottom: 2px solid #2a2a2a;
+        }
+
+        .admin-tab-btn {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: color 0.2s, border-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: inherit;
+        }
+
+        .admin-tab-btn:hover { color: #ccc; }
+        .admin-tab-btn.active { color: #7C3AED; border-bottom-color: #7C3AED; }
+
+        .admin-tab-badge {
+            background: #7C3AED;
+            color: white;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            padding: 1px 6px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        /* ── Tab Panels ── */
+        .admin-tab-panel { display: none; }
+        .admin-tab-panel.active { display: block; }
+
+        /* ── Games Panel ── */
+        .games-list {
+            background: #1a1a1a;
+            border-radius: 0 0 10px 10px;
+            padding: 20px;
+            border: 1px solid #2a2a2a;
+            border-top: none;
+        }
+
+        .games-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .games-list h2 { margin: 0; font-size: 1.1rem; }
+
+        .game-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+        .game-item:last-child { border-bottom: none; }
+        .game-actions { display: flex; gap: 8px; }
+
+        /* ── Reports & Suggestions panels ── */
+        .admin-section {
+            background: #1a1a1a;
+            border-radius: 0 0 10px 10px;
+            padding: 20px;
+            border: 1px solid #2a2a2a;
+            border-top: none;
+        }
+
+        .admin-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .admin-section-header h2 { margin: 0; font-size: 1.1rem; }
+
+        .filter-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+
+        .filter-btn {
+            padding: 6px 14px;
+            border: 1px solid #333;
+            background: #222;
+            color: #888;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover { border-color: #555; color: #ccc; }
+        .filter-btn.active { background: #7C3AED; color: white; border-color: #7C3AED; }
+
+        /* ── Admin Items (Reports / Suggestions) ── */
+        .admin-item {
+            background: #222;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: border-color 0.2s;
+        }
+        .admin-item:hover { border-color: #444; }
+
+        .admin-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .admin-item-type {
+            font-size: 0.8rem;
+            background: #2a2a2a;
+            padding: 3px 8px;
+            border-radius: 4px;
+            color: #aaa;
+            margin-right: 6px;
+        }
+
+        .admin-item-reason {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #ccc;
+        }
+
+        .admin-status-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+            font-weight: 600;
+        }
+
+        .admin-item-date { font-size: 0.75rem; color: #555; flex-shrink: 0; }
+
+        .admin-item-body { margin-bottom: 12px; }
+
+        .admin-item-title {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #e0e0e0;
+            margin-bottom: 6px;
+        }
+
+        .admin-item-description {
+            font-size: 0.875rem;
+            color: #aaa;
+            line-height: 1.5;
+            margin-bottom: 8px;
+            white-space: pre-wrap;
+        }
+
+        .admin-item-field {
+            font-size: 0.82rem;
+            color: #888;
+            margin-bottom: 4px;
+        }
+
+        .admin-field-label {
+            font-weight: 600;
+            color: #666;
+            margin-right: 4px;
+        }
+
+        .admin-note {
+            background: rgba(124,58,237,0.08);
+            border-left: 3px solid #7C3AED;
+            padding: 6px 10px;
+            border-radius: 0 4px 4px 0;
+            margin-top: 6px;
+        }
+
+        .admin-item-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .admin-loading, .admin-empty {
+            text-align: center;
+            padding: 2rem;
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .admin-error { color: #DC2626; padding: 1rem; }
+
+        /* ── Buttons ── */
+        .btn {
+            padding: 7px 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            font-family: inherit;
+            font-weight: 600;
+            transition: filter 0.15s, opacity 0.15s;
+        }
+        .btn:hover { filter: brightness(1.15); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-primary    { background: #7C3AED; color: white; }
+        .btn-danger     { background: #DC2626; color: white; }
+        .btn-warning    { background: #F59E0B; color: #111; }
+        .btn-suggestion-note { background: #2a2a2a; color: #ccc; border: 1px solid #444; }
+
+        /* ── Modal ── */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            margin: 5% auto;
+            padding: 24px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 85vh;
+            overflow-y: auto;
+            border: 1px solid #2a2a2a;
+        }
+
+        .modal-content h2 { margin: 0 0 20px; color: #7C3AED; }
+
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; margin-bottom: 5px; color: #bbb; font-size: 0.875rem; font-weight: 600; }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 9px 11px;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 5px;
+            color: white;
+            font-family: inherit;
+            font-size: 0.875rem;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus { outline: none; border-color: #7C3AED; }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+        .form-group select option { background: #1a1a1a; }
+
+        /* ── Login ── */
+        .login-form {
+            max-width: 400px;
+            margin: 120px auto;
+            padding: 28px;
+            background: #1a1a1a;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #2a2a2a;
+        }
+        .login-form h2 { margin-bottom: 20px; color: #7C3AED; }
+
+        .error-message   { color: #DC2626; margin-bottom: 10px; font-size: 0.875rem; }
+        .success-message { color: #10B981; margin-bottom: 10px; font-size: 0.875rem; }
+
+        /* ── Audit Log ── */
+        .audit-log {
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+            max-height: 260px;
+            overflow-y: auto;
+            border: 1px solid #2a2a2a;
+        }
+
+        .audit-log h3 { margin: 0 0 12px; font-size: 0.875rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .audit-entry {
+            padding: 7px 0;
+            border-bottom: 1px solid #222;
+            font-size: 0.78rem;
+            color: #666;
+        }
+        .audit-entry:last-child { border-bottom: none; }
+        .audit-entry strong { color: #888; }
+        .audit-entry code { color: #555; font-family: monospace; }
+
+        @media (max-width: 600px) {
+            .admin-header { flex-direction: column; }
+            .admin-tabs { overflow-x: auto; }
+            .admin-tab-btn { white-space: nowrap; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="login-container" class="login-form">
+    <h2>🔐 Admin Access</h2>
+    <div id="login-message"></div>
+    <button id="login-btn" class="btn btn-primary" style="width:100%;padding:12px;font-size:1rem;">Login con Google</button>
+</div>
+
+<!-- ══ ADMIN PANEL ══ -->
+<div id="admin-container" style="display:none">
+    <div class="admin-panel">
+
+        <!-- Header -->
+        <div class="admin-header">
+            <div>
+                <h1>⚙ Admin Panel — Jacsaw Nexus</h1>
+                <p style="margin:4px 0 0;font-size:0.8rem;color:#555">UID: <span id="admin-email" style="font-family:monospace"></span></p>
+            </div>
+            <div class="admin-header-right">
+                <a href="index.html" class="btn" style="background:#222;color:#ccc;border:1px solid #333;text-decoration:none">← Index</a>
+                <button id="logout-btn" class="btn btn-danger">Cerrar sesión</button>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="admin-stats">
+            <div class="stat-card"><h3>Juegos</h3><div id="total-games">0</div></div>
+            <div class="stat-card"><h3>Categorías</h3><div id="total-categories">0</div></div>
+            <div class="stat-card"><h3>Confianza Media</h3><div id="avg-trust">0</div></div>
+            <div class="stat-card"><h3>Última Actualización</h3><div id="last-updated" style="font-size:0.85rem">-</div></div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="admin-tabs">
+            <button class="admin-tab-btn active" data-tab="games">🎮 Juegos</button>
+            <button class="admin-tab-btn" data-tab="reports">
+                ⚑ Reportes
+                <span class="admin-tab-badge" id="reports-count">0</span>
+            </button>
+            <button class="admin-tab-btn" data-tab="suggestions">
+                💡 Sugerencias
+                <span class="admin-tab-badge" id="suggestions-count">0</span>
+            </button>
+        </div>
+
+        <!-- ── TAB: GAMES ── -->
+        <div class="admin-tab-panel active" id="tab-games">
+            <div class="games-list">
+                <div class="games-list-header">
+                    <h2>Gestión de Recursos</h2>
+                    <button id="add-game-btn" class="btn btn-primary">+ Añadir Juego</button>
+                </div>
+                <div id="games-container">
+                    <div class="admin-loading">Cargando juegos…</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── TAB: REPORTS ── -->
+        <div class="admin-tab-panel" id="tab-reports">
+            <div class="admin-section">
+                <div class="admin-section-header">
+                    <h2>Reportes de la Comunidad</h2>
+                    <div class="filter-bar">
+                        <button class="filter-btn active" data-section="reports" data-filter="all">Todos</button>
+                        <button class="filter-btn" data-section="reports" data-filter="pending">Pendientes</button>
+                        <button class="filter-btn" data-section="reports" data-filter="resolved">Resueltos</button>
+                        <button class="filter-btn" data-section="reports" data-filter="dismissed">Descartados</button>
+                    </div>
+                </div>
+                <div id="reports-container">
+                    <div class="admin-loading">Selecciona esta pestaña para cargar reportes.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── TAB: SUGGESTIONS ── -->
+        <div class="admin-tab-panel" id="tab-suggestions">
+            <div class="admin-section">
+                <div class="admin-section-header">
+                    <h2>Sugerencias de la Comunidad</h2>
+                    <div class="filter-bar">
+                        <button class="filter-btn active" data-section="suggestions" data-filter="all">Todas</button>
+                        <button class="filter-btn" data-section="suggestions" data-filter="pending">Pendientes</button>
+                        <button class="filter-btn" data-section="suggestions" data-filter="approved">Aprobadas</button>
+                        <button class="filter-btn" data-section="suggestions" data-filter="done">Hechas</button>
+                        <button class="filter-btn" data-section="suggestions" data-filter="rejected">Rechazadas</button>
+                    </div>
+                </div>
+                <div id="suggestions-container">
+                    <div class="admin-loading">Selecciona esta pestaña para cargar sugerencias.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Log -->
+        <div class="audit-log">
+            <h3>Log de auditoría</h3>
+            <div id="audit-entries"></div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ══ GAME MODAL ══ -->
+<div id="game-modal" class="modal">
+    <div class="modal-content">
+        <h2 id="modal-title">Añadir Juego</h2>
+        <form id="game-form">
+            <input type="hidden" id="game-id" name="id">
+            <div class="form-group">
+                <label for="game-name">Nombre *</label>
+                <input type="text" id="game-name" name="name" required maxlength="100">
+            </div>
+            <div class="form-group">
+                <label for="game-category">Categoría *</label>
+                <select id="game-category" name="category" required>
+                    <option value="">Seleccionar…</option>
+                    <option value="REPACKERS">REPACKERS</option>
+                    <option value="PRE-INSTALADOS">PRE-INSTALADOS</option>
+                    <option value="JUEGOS PC">JUEGOS PC</option>
+                    <option value="TORRENTS">TORRENTS</option>
+                    <option value="INDIE">INDIE</option>
+                    <option value="GOG-FREE">GOG-FREE</option>
+                    <option value="ABANDONWARE">ABANDONWARE</option>
+                    <option value="ANDROID">ANDROID</option>
+                    <option value="ROMS">ROMS</option>
+                    <option value="MAC">MAC</option>
+                    <option value="LINUX">LINUX</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="game-url">URL *</label>
+                <input type="url" id="game-url" name="url" required>
+            </div>
+            <div class="form-group">
+                <label for="game-trust">Nivel de Confianza (1-5) *</label>
+                <input type="number" id="game-trust" name="trust" min="1" max="5" required>
+            </div>
+            <div class="form-group">
+                <label for="game-color">Color *</label>
+                <input type="color" id="game-color" name="color" required value="#7C3AED">
+            </div>
+            <div class="form-group">
+                <label for="game-tags">Tags (separados por coma)</label>
+                <input type="text" id="game-tags" name="tags" placeholder="PC, Lossless, etc.">
+            </div>
+            <div class="form-group">
+                <label for="game-desc">Descripción *</label>
+                <textarea id="game-desc" name="desc" required maxlength="500"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="game-notes">Notas</label>
+                <textarea id="game-notes" name="notes" maxlength="1000"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="game-warn">Advertencia (opcional)</label>
+                <input type="text" id="game-warn" name="warn" placeholder="RIESGO, MODS, etc.">
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="game-isnew" name="isNew"> Marcar como Nuevo
+                </label>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:20px">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                <button type="button" id="cancel-btn" class="btn btn-danger">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script type="module" src="admin.js"></script>
+</body>
+</html>

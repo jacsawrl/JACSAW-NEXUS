@@ -1,25 +1,47 @@
 // =============================================
-// NEXUS HUB — app.js
+// JACSAW NEXUS — app.js  (módulo ES)
 // =============================================
+// NOTA: al ser type="module", las funciones NO son globales
+// automáticamente. Las que usan onclick en HTML se exponen
+// explícitamente en window al final del archivo.
 
-// --- STATE ---
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+// ── Firebase (reutiliza la instancia de _nx.js si ya existe) ──
+const _fbCfg = {
+    apiKey:    'AIzaSyDIkK8fuOIvbAZ362AG_-FSvbPXOpTR5Bc',
+    authDomain:'jacsaw-nexus.firebaseapp.com',
+    projectId: 'jacsaw-nexus',
+};
+const _fbApp = getApps().length ? getApps()[0] : initializeApp(_fbCfg);
+const db     = getFirestore(_fbApp);
+
+// ── STATE ─────────────────────────────────────────────────────
 const STATE = {
-    categories: new Set(['ALL']),
-    sort: 'DEFAULT',
-    view: 'grid',
+    categories:  new Set(['ALL']),
+    sort:        'DEFAULT',
+    view:        'grid',
     trustFilter: 'ALL',
-    search: '',
-    statsOpen: false,
-    adminAuth: false,
+    search:      '',
+    statsOpen:   false,
 };
 
-// --- PERSISTENT DATA ---
-let favorites     = loadJSON('nexus_favorites', []);
-let searchHistory = loadJSON('nexus_history', []);
-let customResources = loadJSON('nexus_custom', []);
-let hiddenIds     = loadJSON('nexus_hidden', []);
-let overrides     = loadJSON('nexus_overrides', {});
-let theme         = localStorage.getItem('nexus_theme') || 'dark';
+// ── POPULARITY (async desde Firestore) ────────────────────────
+let _popularityMap = {};
+
+// ── DATOS (cargados exclusivamente desde Firestore) ───────────
+let NEXUS_DATA_DEFAULT = [];
+
+let DOM = {};
+
+// ── PERSISTENCIA LOCAL ─────────────────────────────────────────
+let favorites       = loadJSON('nexus_favorites', []);
+let searchHistory   = loadJSON('nexus_history',   []);
+let customResources = loadJSON('nexus_custom',     []);
+let hiddenIds       = loadJSON('nexus_hidden',     []);
+let overrides       = loadJSON('nexus_overrides',  {});
+let theme           = localStorage.getItem('nexus_theme') || 'dark';
 
 function loadJSON(key, fallback) {
     try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
@@ -29,10 +51,32 @@ function saveJSON(key, value) {
     try { localStorage.setItem(key, JSON.stringify(value)); } catch (_) {}
 }
 
-// --- COMPUTED DATA ---
+// ── CARGAR DATOS DE FIRESTORE ──────────────────────────────────
+async function loadNexusData() {
+    try {
+        const snap  = await getDocs(collection(db, '_games'));
+        const games = [];
+        snap.forEach(d => {
+            const id = parseInt(d.id, 10);
+            if (!Number.isFinite(id)) return;
+            games.push({ id, ...d.data() });
+        });
+        // Ordenar por nombre
+        games.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+        NEXUS_DATA_DEFAULT = games;
+        return games;
+    } catch (err) {
+        console.error('[app] Error cargando datos de Firestore:', err.message);
+        NEXUS_DATA_DEFAULT = [];
+        return [];
+    }
+}
+
+// ── COMPUTED DATA ──────────────────────────────────────────────
 function getAllResources() {
-    const defaults = NEXUS_DATA_DEFAULT
-        .filter(r => !hiddenIds.includes(r.id))
+    const hiddenSet = new Set(hiddenIds);
+    const defaults  = NEXUS_DATA_DEFAULT
+        .filter(r => !hiddenSet.has(r.id))
         .map(r => overrides[r.id] ? { ...r, ...overrides[r.id] } : r);
     return [...defaults, ...customResources];
 }
@@ -52,7 +96,7 @@ function toggleTheme() {
 }
 
 // ============================================================
-// VIEW (grid / list)
+// VIEW
 // ============================================================
 function toggleView() {
     STATE.view = STATE.view === 'grid' ? 'list' : 'grid';
@@ -78,20 +122,35 @@ function esc(text) {
 }
 function highlight(text, term) {
     if (!term) return esc(text);
-    const escaped = esc(text);
+    const escaped  = esc(text);
     const safeTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     return escaped.replace(new RegExp(`(${safeTerm})`, 'gi'), '<mark class="hl">$1</mark>');
+}
+function fmtCount(n) {
+    if (!n || n === 0) return null;
+    if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+    return String(n);
 }
 
 // ============================================================
 // FAVORITES
 // ============================================================
-function saveFavorites() { saveJSON('nexus_favorites', favorites); }
+function saveFavorites() {
+    saveJSON('nexus_favorites', favorites);
+    if (window._nx && _nx.user()) _nx.saveFavs(favorites).catch(() => {});
+}
 function updateFavCount() {
     const el = document.getElementById('sidebar-fav-count');
     if (el) el.textContent = favorites.length > 0 ? favorites.length : '';
 }
-function toggleFavorite(id) {
+async function toggleFavorite(id) {
+    const u = window._nx ? _nx.user() : null;
+    if (!u) {
+        const want = await showConfirm(
+            'Inicia sesión para guardar favoritos en la nube.\n\n¿Iniciar sesión con Google?'
+        );
+        if (want && window._nx) { _nx.login(); return; }
+    }
     if (favorites.includes(id)) {
         favorites = favorites.filter(f => f !== id);
     } else {
@@ -99,14 +158,12 @@ function toggleFavorite(id) {
     }
     saveFavorites();
     updateFavCount();
-    // Update all fav buttons in DOM without full re-render
     document.querySelectorAll(`.btn-fav[data-id="${id}"]`).forEach(btn => {
         const isFav = favorites.includes(id);
         btn.classList.toggle('is-fav', isFav);
         btn.textContent = isFav ? '★' : '☆';
         btn.title = isFav ? 'Quitar de favoritos' : 'Añadir a favoritos';
     });
-    // Full re-render only if we're in favorites view
     if (STATE.categories.has('FAVORITES')) render();
 }
 
@@ -124,7 +181,7 @@ function copyUrl(url, btn) {
 }
 
 // ============================================================
-// SHARE FILTER  (feature 10)
+// SHARE FILTER
 // ============================================================
 function shareFilter() {
     const params = new URLSearchParams();
@@ -133,30 +190,24 @@ function shareFilter() {
     if (cats.length) params.set('cats', cats.join(','));
     if (STATE.sort !== 'DEFAULT') params.set('sort', STATE.sort);
     if (STATE.trustFilter !== 'ALL') params.set('trust', STATE.trustFilter);
-
     const url = `${location.origin}${location.pathname}${params.size ? '?' + params : ''}`;
-    navigator.clipboard.writeText(url).then(() => {
-        showToast('¡Enlace copiado! Compártelo con quien quieras.', 'success');
-    }).catch(() => showToast('No se pudo copiar el enlace', 'error'));
+    navigator.clipboard.writeText(url)
+        .then(() => showToast('¡Enlace copiado!', 'success'))
+        .catch(() => showToast('No se pudo copiar el enlace', 'error'));
     history.pushState(null, '', url);
 }
 
 // ============================================================
-// URL PARAMS  (feature 10 — on load)
+// URL PARAMS
 // ============================================================
 function readUrlParams() {
     const p = new URLSearchParams(location.search);
     if (p.has('q')) {
         STATE.search = p.get('q');
         const el = document.getElementById('main-search');
-        if (el) {
-            el.value = STATE.search;
-            document.getElementById('clear-search').style.display = 'flex';
-        }
+        if (el) { el.value = STATE.search; document.getElementById('clear-search').style.display = 'flex'; }
     }
-    if (p.has('cats')) {
-        STATE.categories = new Set(p.get('cats').split(',').filter(Boolean));
-    }
+    if (p.has('cats')) STATE.categories = new Set(p.get('cats').split(',').filter(Boolean));
     if (p.has('sort')) {
         STATE.sort = p.get('sort');
         const sel = document.getElementById('sort-select');
@@ -171,7 +222,7 @@ function readUrlParams() {
 }
 
 // ============================================================
-// SEARCH HISTORY  (feature 6)
+// SEARCH HISTORY
 // ============================================================
 function addToHistory(term) {
     if (!term || term.length < 2) return;
@@ -188,7 +239,7 @@ function showHistory(inputEl) {
     container.innerHTML =
         `<div class="history-label">HISTORIAL</div>` +
         items.map(h =>
-            `<div class="history-item" onmousedown="selectHistory(${JSON.stringify(h)})">${highlight(h, query)}</div>`
+            `<div class="history-item" onmousedown="window._appSelectHistory(${JSON.stringify(h)})">${highlight(h, query)}</div>`
         ).join('');
     container.classList.add('visible');
 }
@@ -205,7 +256,7 @@ function selectHistory(term) {
 }
 
 // ============================================================
-// FILTERING  (feature 7 — multi-category)
+// FILTERING
 // ============================================================
 function filterByCategory(cat) {
     if (cat === 'ALL' || cat === 'FAVORITES') {
@@ -227,10 +278,10 @@ function filterByCategory(cat) {
 function updateCategoryChips() {
     document.querySelectorAll('.category-chip').forEach(el => {
         const cat = el.dataset.cat;
-        let active = false;
-        if (cat === 'ALL') active = STATE.categories.has('ALL');
-        else if (cat === 'FAVORITES') active = STATE.categories.has('FAVORITES');
-        else active = STATE.categories.has(cat);
+        const active =
+            cat === 'ALL'       ? STATE.categories.has('ALL') :
+            cat === 'FAVORITES' ? STATE.categories.has('FAVORITES') :
+                                  STATE.categories.has(cat);
         el.classList.toggle('active', active);
     });
 }
@@ -246,20 +297,21 @@ function setTrustFilter(level) {
 // DATA FILTERING + SORTING
 // ============================================================
 function getFilteredData() {
-    const all = getAllResources();
-    const term = STATE.search.toLowerCase().trim();
+    const all    = getAllResources();
+    const term   = STATE.search.toLowerCase().trim();
+    const favSet = new Set(favorites);
     return all.filter(item => {
         const matchSearch = !term ||
             item.name.toLowerCase().includes(term) ||
             item.category.toLowerCase().includes(term) ||
-            item.tags.some(t => t.toLowerCase().includes(term)) ||
+            (item.tags || []).some(t => t.toLowerCase().includes(term)) ||
             item.desc.toLowerCase().includes(term) ||
-            (item.notes && item.notes.toLowerCase().includes(term));
+            (item.notes || '').toLowerCase().includes(term);
 
-        let matchCat;
-        if (STATE.categories.has('ALL'))       matchCat = true;
-        else if (STATE.categories.has('FAVORITES')) matchCat = favorites.includes(item.id);
-        else matchCat = STATE.categories.has(item.category);
+        const matchCat =
+            STATE.categories.has('ALL')        ? true :
+            STATE.categories.has('FAVORITES')  ? favSet.has(item.id) :
+                                                 STATE.categories.has(item.category);
 
         const matchTrust =
             STATE.trustFilter === 'VERIFIED' ? item.trust >= 4 :
@@ -270,10 +322,11 @@ function getFilteredData() {
 }
 function sortData(data) {
     const sorted = [...data];
-    if (STATE.sort === 'TRUST_DESC') sorted.sort((a,b) => b.trust - a.trust);
-    else if (STATE.sort === 'TRUST_ASC')  sorted.sort((a,b) => a.trust - b.trust);
-    else if (STATE.sort === 'NAME_ASC')   sorted.sort((a,b) => a.name.localeCompare(b.name,'es'));
-    else if (STATE.sort === 'NAME_DESC')  sorted.sort((a,b) => b.name.localeCompare(a.name,'es'));
+    if      (STATE.sort === 'TRUST_DESC') sorted.sort((a, b) => b.trust - a.trust);
+    else if (STATE.sort === 'TRUST_ASC')  sorted.sort((a, b) => a.trust - b.trust);
+    else if (STATE.sort === 'NAME_ASC')   sorted.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+    else if (STATE.sort === 'NAME_DESC')  sorted.sort((a, b) => b.name.localeCompare(a.name, 'es'));
+    else if (STATE.sort === 'POPULAR')    sorted.sort((a, b) => (_popularityMap[b.id] || 0) - (_popularityMap[a.id] || 0));
     return sorted;
 }
 
@@ -281,12 +334,11 @@ function sortData(data) {
 // RENDER
 // ============================================================
 function render() {
-    const grid = document.getElementById('resource-grid');
+    const grid     = DOM.resourceGrid || document.getElementById('resource-grid');
     const filtered = sortData(getFilteredData());
-    const term = STATE.search.trim();
+    const term     = STATE.search.trim();
+    const info     = DOM.resultInfo  || document.getElementById('result-info');
 
-    // Result count
-    const info = document.getElementById('result-info');
     if (info) {
         const isFiltered = term || !STATE.categories.has('ALL') || STATE.trustFilter !== 'ALL';
         info.innerHTML = isFiltered
@@ -304,7 +356,7 @@ function render() {
                 <h3>${isFav ? 'Sin favoritos guardados' : 'Sin resultados'}</h3>
                 <p>${isFav
                     ? 'Añade recursos a favoritos pulsando ☆ en cualquier card.'
-                    : `No hay recursos que coincidan.<br>Prueba a ajustar los filtros o la búsqueda.`
+                    : 'No hay recursos que coincidan.<br>Prueba a ajustar los filtros.'
                 }</p>
             </div>`;
         return;
@@ -323,13 +375,16 @@ function render() {
 }
 
 // ============================================================
-// CREATE CARD  (features 3, 9, 12, 13)
+// CREATE CARD
 // ============================================================
 function createCard(item, index, term = '') {
-    const tc = getTrustColor(item.trust);
-    const isFav = favorites.includes(item.id);
-    const delay = Math.min(index * 35, 400);
-    const hasNotes = item.notes && item.notes.trim();
+    const tc          = getTrustColor(item.trust);
+    const isFav       = favorites.includes(item.id);
+    const delay       = Math.min(index * 35, 400);
+    const hasNotes    = item.notes && item.notes.trim();
+    const clicks      = _popularityMap[item.id];
+    const clicksLabel = fmtCount(clicks);
+    const safeUrl     = esc(item.url);
 
     return `
 <div class="card" style="animation-delay:${delay}ms">
@@ -338,10 +393,13 @@ function createCard(item, index, term = '') {
 
     <div class="card-header">
         <span class="cat-badge" style="border-color:${item.color};color:${item.color}">${esc(item.category)}</span>
-        <div class="online-indicator"><span class="status-pulse"></span>ONLINE</div>
+        <div style="display:flex;align-items:center;gap:8px">
+            ${clicksLabel ? `<span class="visit-counter" data-rid="${item.id}" title="Visitas registradas">👁 ${clicksLabel}</span>` : ''}
+            <div class="online-indicator"><span class="status-pulse"></span>ONLINE</div>
+        </div>
     </div>
 
-    <h3 class="card-title" onclick="openDetailModal(${item.id})">${highlight(item.name, term)}</h3>
+    <h3 class="card-title" onclick="_appOpenDetail(${item.id})">${highlight(item.name, term)}</h3>
     <p class="card-desc">${highlight(item.desc, term)}</p>
 
     <div class="trust-section">
@@ -350,17 +408,17 @@ function createCard(item, index, term = '') {
             <span style="color:${tc}">${item.trust}/5 — ${getTrustLabel(item.trust)}</span>
         </div>
         <div class="trust-bar-bg">
-            <div class="trust-bar-fill" style="width:${item.trust*20}%;background:${tc}"></div>
+            <div class="trust-bar-fill" style="width:${item.trust * 20}%;background:${tc}"></div>
         </div>
     </div>
 
     <div class="tag-container">
-        ${item.tags.map(t => `<span class="tag">${highlight(t, term)}</span>`).join('')}
+        ${(item.tags || []).map(t => `<span class="tag">${highlight(t, term)}</span>`).join('')}
     </div>
 
     ${hasNotes ? `
     <div class="notes-section">
-        <button class="notes-toggle" onclick="toggleNotes(${item.id}, this)">
+        <button class="notes-toggle" onclick="_appToggleNotes(${item.id}, this)">
             <span class="notes-toggle-icon">›</span> Notas
         </button>
         <div class="notes-content" id="notes-content-${item.id}">
@@ -369,44 +427,47 @@ function createCard(item, index, term = '') {
     </div>` : ''}
 
     <div class="card-actions">
-        <a href="${esc(item.url)}" target="_blank" rel="noopener noreferrer"
-           class="btn-visit" onclick="return securityCheck(${item.trust})">VISITAR</a>
-        <button class="btn-copy" onclick="copyUrl('${esc(item.url)}', this)" title="Copiar URL">⎘</button>
+        <button class="btn-visit" onclick="_appTrackAndVisit(event,${item.id},${item.trust},'${safeUrl}')">VISITAR</button>
+        <button class="btn-copy"  onclick="_appCopyUrl('${safeUrl}', this)" title="Copiar URL">⎘</button>
         <button class="btn-fav ${isFav ? 'is-fav' : ''}" data-id="${item.id}"
-                onclick="toggleFavorite(${item.id})"
+                onclick="_appToggleFav(${item.id})"
                 title="${isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}">
             ${isFav ? '★' : '☆'}
         </button>
-        <button class="btn-info" onclick="openDetailModal(${item.id})" title="Ver detalles">→</button>
+        <button class="btn-info" onclick="_appOpenDetail(${item.id})" title="Ver detalles">→</button>
     </div>
 </div>`;
 }
 
 // ============================================================
-// CREATE LIST ROW  (feature 2)
+// CREATE LIST ROW
 // ============================================================
 function createListRow(item, term = '') {
-    const tc = getTrustColor(item.trust);
-    const isFav = favorites.includes(item.id);
-    const dots = '■'.repeat(item.trust) + '□'.repeat(5 - item.trust);
+    const tc          = getTrustColor(item.trust);
+    const isFav       = favorites.includes(item.id);
+    const dots        = '■'.repeat(item.trust) + '□'.repeat(5 - item.trust);
+    const clicks      = _popularityMap[item.id];
+    const clicksLabel = fmtCount(clicks);
+    const safeUrl     = esc(item.url);
+
     return `
 <div class="list-row ${item.warn ? 'list-row--warn' : ''}">
-    <div class="list-name" onclick="openDetailModal(${item.id})">
+    <div class="list-name" onclick="_appOpenDetail(${item.id})">
         ${item.isNew ? '<span class="new-badge new-badge--sm">N</span>' : ''}
         ${highlight(item.name, term)}
+        ${clicksLabel ? `<span class="visit-counter visit-counter--sm" data-rid="${item.id}">👁 ${clicksLabel}</span>` : ''}
     </div>
     <div><span class="cat-badge" style="border-color:${item.color};color:${item.color}">${esc(item.category)}</span></div>
     <div class="list-trust" style="color:${tc}">
         <span style="letter-spacing:2px">${dots}</span>
         <span style="font-size:0.68rem;color:var(--text-tertiary)">${getTrustLabel(item.trust)}</span>
     </div>
-    <div class="list-tags">${item.tags.slice(0,3).map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>
+    <div class="list-tags">${(item.tags || []).slice(0, 3).map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>
     <div class="list-actions">
-        <a href="${esc(item.url)}" target="_blank" rel="noopener noreferrer"
-           class="btn-visit btn-visit--sm" onclick="return securityCheck(${item.trust})">Visitar</a>
-        <button class="btn-copy" onclick="copyUrl('${esc(item.url)}', this)" title="Copiar URL">⎘</button>
+        <button class="btn-visit btn-visit--sm" onclick="_appTrackAndVisit(event,${item.id},${item.trust},'${safeUrl}')">Visitar</button>
+        <button class="btn-copy" onclick="_appCopyUrl('${safeUrl}', this)" title="Copiar URL">⎘</button>
         <button class="btn-fav ${isFav ? 'is-fav' : ''}" data-id="${item.id}"
-                onclick="toggleFavorite(${item.id})">
+                onclick="_appToggleFav(${item.id})">
             ${isFav ? '★' : '☆'}
         </button>
     </div>
@@ -414,38 +475,55 @@ function createListRow(item, term = '') {
 }
 
 // ============================================================
-// NOTES TOGGLE  (feature 13)
+// NOTES TOGGLE
 // ============================================================
 function toggleNotes(id, btn) {
     const content = document.getElementById(`notes-content-${id}`);
-    const icon = btn.querySelector('.notes-toggle-icon');
-    const isOpen = content.classList.toggle('open');
+    const icon    = btn.querySelector('.notes-toggle-icon');
+    const isOpen  = content.classList.toggle('open');
     icon.style.transform = isOpen ? 'rotate(90deg)' : '';
 }
 
 // ============================================================
-// SECURITY CHECK
+// SECURITY CHECK + VISIT TRACKING
 // ============================================================
-function securityCheck(score) {
+async function trackAndVisit(e, id, trust, url) {
+    if (!await securityCheck(trust)) return;
+    window.open(url, '_blank', 'noopener,noreferrer');
+    if (window._nx) {
+        _nx.updateUserPageVisit();
+        _nx.trackVisit(id).then(() => {
+            _popularityMap[id] = (_popularityMap[id] || 0) + 1;
+            // Actualizar badges sin re-render completo
+            document.querySelectorAll(`.visit-counter[data-rid="${id}"]`).forEach(el => {
+                el.textContent = '👁 ' + fmtCount(_popularityMap[id]);
+            });
+        }).catch(() => {});
+    }
+}
+async function securityCheck(score) {
     if (score <= 2) {
-        return confirm(
+        return await showConfirm(
             'AVISO DE SEGURIDAD\n\n' +
             'Este sitio tiene baja reputación. Asegúrate de tener uBlock Origin activo ' +
-            'y de saber identificar falsos positivos en VirusTotal.\n\n¿Deseas continuar?'
+            'y saber identificar falsos positivos en VirusTotal.\n\n¿Deseas continuar?'
         );
     }
     return true;
 }
 
 // ============================================================
-// DETAIL MODAL  (feature 14)
+// DETAIL MODAL
 // ============================================================
 function openDetailModal(id) {
     const item = getAllResources().find(r => r.id === id);
     if (!item) return;
-    const tc = getTrustColor(item.trust);
-    const isFav = favorites.includes(id);
-    const dots = '■'.repeat(item.trust) + '□'.repeat(5 - item.trust);
+    const tc          = getTrustColor(item.trust);
+    const isFav       = favorites.includes(id);
+    const dots        = '■'.repeat(item.trust) + '□'.repeat(5 - item.trust);
+    const clicks      = _popularityMap[id];
+    const clicksLabel = fmtCount(clicks);
+    const safeUrl     = esc(item.url);
 
     document.getElementById('detail-modal-content').innerHTML = `
         <div class="detail-header">
@@ -453,6 +531,7 @@ function openDetailModal(id) {
                 <span class="cat-badge" style="border-color:${item.color};color:${item.color}">${esc(item.category)}</span>
                 ${item.isNew ? '<span class="new-badge" style="position:relative;top:0;left:0;border-radius:3px">NUEVO</span>' : ''}
                 ${item.warn  ? `<span class="warning-strip" style="position:relative;top:0;right:0;border-radius:3px">${esc(item.warn)}</span>` : ''}
+                ${clicksLabel ? `<span class="visit-counter" data-rid="${id}" style="margin-left:auto">👁 ${clicksLabel} visitas</span>` : ''}
             </div>
             <h2 class="detail-title">${esc(item.name)}</h2>
             <div class="detail-trust" style="color:${tc}">
@@ -469,7 +548,7 @@ function openDetailModal(id) {
         <div class="detail-section">
             <h4 class="detail-section-title">Tags</h4>
             <div class="tag-container">
-                ${item.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}
+                ${(item.tags || []).map(t => `<span class="tag">${esc(t)}</span>`).join('')}
             </div>
         </div>
         ${item.added ? `
@@ -478,13 +557,12 @@ function openDetailModal(id) {
             <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-tertiary)">${esc(item.added)}</span>
         </div>` : ''}
         <div class="detail-actions">
-            <a href="${esc(item.url)}" target="_blank" rel="noopener noreferrer"
-               class="btn-visit" onclick="return securityCheck(${item.trust})" style="flex:1;text-align:center">
+            <button class="btn-visit" onclick="_appTrackAndVisit(event,${id},${item.trust},'${safeUrl}')" style="flex:1;text-align:center">
                VISITAR RECURSO
-            </a>
-            <button class="detail-copy" onclick="copyUrl('${esc(item.url)}', this)">⎘ Copiar URL</button>
+            </button>
+            <button class="detail-copy" onclick="_appCopyUrl('${safeUrl}', this)">⎘ Copiar URL</button>
             <button class="btn-fav ${isFav ? 'is-fav' : ''}" data-id="${id}"
-                    onclick="toggleFavInModal(${id}, this)" style="width:42px">
+                    onclick="_appToggleFavModal(${id}, this)" style="width:42px">
                 ${isFav ? '★' : '☆'}
             </button>
         </div>
@@ -504,7 +582,7 @@ function closeDetailModal() {
 }
 
 // ============================================================
-// STATS PANEL  (feature 11)
+// STATS PANEL
 // ============================================================
 function toggleStats() {
     STATE.statsOpen = !STATE.statsOpen;
@@ -513,33 +591,34 @@ function toggleStats() {
     if (STATE.statsOpen) renderStats();
 }
 function renderStats() {
-    const all = getAllResources();
-    const avg = all.reduce((s, r) => s + r.trust, 0) / all.length;
+    const all      = getAllResources();
+    const avg      = all.reduce((s, r) => s + r.trust, 0) / all.length;
     const newCount = all.filter(r => r.isNew).length;
     const catCounts = {};
     all.forEach(r => { catCounts[r.category] = (catCounts[r.category] || 0) + 1; });
-    const catKeys = Object.keys(catCounts).sort((a,b) => catCounts[b] - catCounts[a]);
-    const maxCat = Math.max(...Object.values(catCounts));
+    const catKeys = Object.keys(catCounts).sort((a, b) => catCounts[b] - catCounts[a]);
+    const maxCat  = Math.max(...Object.values(catCounts));
 
     animCount('stat-total', all.length);
-    animCount('stat-avg', avg.toFixed(1), true);
-    animCount('stat-cats', catKeys.length);
-    animCount('stat-new', newCount);
+    animCount('stat-avg',   avg.toFixed(1), true);
+    animCount('stat-cats',  catKeys.length);
+    animCount('stat-new',   newCount);
 
     document.getElementById('stats-by-cat').innerHTML = catKeys.map(cat => `
         <div class="stats-bar-row">
             <span class="stats-label" title="${cat}">${cat}</span>
             <div class="stats-bar-track">
-                <div class="stats-bar-fill" style="width:${((catCounts[cat]/maxCat)*100).toFixed(0)}%"></div>
+                <div class="stats-bar-fill" style="width:${((catCounts[cat] / maxCat) * 100).toFixed(0)}%"></div>
             </div>
             <span class="stats-count">${catCounts[cat]}</span>
         </div>`).join('');
 
-    const trustCounts = {1:0,2:0,3:0,4:0,5:0};
+    const trustCounts = { 1:0, 2:0, 3:0, 4:0, 5:0 };
     all.forEach(r => { if (trustCounts[r.trust] !== undefined) trustCounts[r.trust]++; });
-    const trustColors = {1:'var(--danger)',2:'var(--danger)',3:'var(--warning)',4:'var(--success)',5:'var(--success)'};
-    const trustLabels = {1:'Peligroso',2:'Dudoso',3:'Aceptable',4:'Confiable',5:'Verificado'};
-    const maxTrust = Math.max(...Object.values(trustCounts)) || 1;
+    const trustColors = { 1:'var(--danger)', 2:'var(--danger)', 3:'var(--warning)', 4:'var(--success)', 5:'var(--success)' };
+    const trustLabels = { 1:'Peligroso', 2:'Dudoso', 3:'Aceptable', 4:'Confiable', 5:'Verificado' };
+    const maxTrust    = Math.max(...Object.values(trustCounts)) || 1;
+
     document.getElementById('stats-by-trust').innerHTML = [5,4,3,2,1].map(t => `
         <div class="stats-bar-row">
             <span class="stats-label" style="color:${trustColors[t]}">${t}★ ${trustLabels[t]}</span>
@@ -550,11 +629,11 @@ function renderStats() {
         </div>`).join('');
 }
 function animCount(elId, target, isFloat = false) {
-    const el = document.getElementById(elId);
+    const el  = document.getElementById(elId);
     if (!el) return;
-    const num = parseFloat(target);
+    const num   = parseFloat(target);
     const start = performance.now();
-    const dur = 700;
+    const dur   = 700;
     function step(now) {
         const p = Math.min((now - start) / dur, 1);
         const e = 1 - Math.pow(1 - p, 3);
@@ -565,14 +644,14 @@ function animCount(elId, target, isFloat = false) {
 }
 
 // ============================================================
-// NAV COUNT ANIMATION  (feature 5)
+// NAV COUNT
 // ============================================================
 function animateNavCount() {
     const total = getAllResources().length;
-    const el = document.getElementById('nav-count');
-    let count = 0;
-    const step = Math.max(1, Math.ceil(total / 25));
-    const iv = setInterval(() => {
+    const el    = DOM.navCount || document.getElementById('nav-count');
+    let count   = 0;
+    const step  = Math.max(1, Math.ceil(total / 25));
+    const iv    = setInterval(() => {
         count = Math.min(count + step, total);
         el.textContent = `INDEX_ONLINE: ${count}_RESOURCES`;
         if (count >= total) clearInterval(iv);
@@ -580,176 +659,107 @@ function animateNavCount() {
 }
 
 // ============================================================
-// EXPORT FAVORITES  (feature 16)
+// AUTH UI
 // ============================================================
-function exportFavorites() {
-    const all = getAllResources();
-    const favItems = all.filter(r => favorites.includes(r.id));
-    if (!favItems.length) { showToast('No tienes favoritos que exportar', 'warning'); return; }
-    const blob = new Blob([JSON.stringify(favItems, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'nexus-favoritos.json'; a.click();
-    URL.revokeObjectURL(url);
-    showToast(`${favItems.length} favorito${favItems.length!==1?'s':''} exportado${favItems.length!==1?'s':''}`, 'success');
-}
-
-// ============================================================
-// ADMIN  (feature 15)
-// ============================================================
-const ADMIN_PASSWORD = 'nexus2025';
-
-function openAdmin() {
-    document.getElementById('admin-modal-overlay').classList.add('active');
-    document.body.style.overflow = 'hidden';
-    document.getElementById('admin-login').style.display    = STATE.adminAuth ? 'none' : 'block';
-    document.getElementById('admin-content').style.display  = STATE.adminAuth ? 'block' : 'none';
-    if (STATE.adminAuth) renderAdminList();
-}
-function closeAdmin() {
-    document.getElementById('admin-modal-overlay').classList.remove('active');
-    document.body.style.overflow = '';
-    document.getElementById('resource-form-container').style.display = 'none';
-    document.getElementById('admin-password-input').value = '';
-}
-function checkAdminPassword() {
-    const input = document.getElementById('admin-password-input');
-    if (input.value === ADMIN_PASSWORD) {
-        STATE.adminAuth = true;
-        document.getElementById('admin-login').style.display = 'none';
-        document.getElementById('admin-content').style.display = 'block';
-        renderAdminList();
-    } else {
-        input.style.borderColor = 'var(--danger)';
-        showToast('Contraseña incorrecta', 'error');
-        setTimeout(() => { input.style.borderColor = ''; }, 1500);
-    }
-}
-function renderAdminList() {
-    const all = getAllResources();
-    const cats = [...new Set(all.map(r => r.category))];
-    document.getElementById('cat-suggestions').innerHTML = cats.map(c => `<option value="${c}">`).join('');
-
-    const hiddenList = NEXUS_DATA_DEFAULT.filter(r => hiddenIds.includes(r.id));
-    document.getElementById('admin-resource-list').innerHTML = `
-        <table class="admin-table">
-            <thead><tr>
-                <th>ID</th><th>Nombre</th><th>Categoría</th><th>Trust</th><th>Tipo</th><th>Acciones</th>
-            </tr></thead>
-            <tbody>${all.map(r => `
-                <tr>
-                    <td style="font-family:var(--font-mono);color:var(--text-tertiary)">#${r.id}</td>
-                    <td><strong>${esc(r.name)}</strong></td>
-                    <td><span class="cat-badge" style="border-color:${r.color};color:${r.color}">${esc(r.category)}</span></td>
-                    <td style="color:${getTrustColor(r.trust)};font-family:var(--font-mono)">${r.trust}/5</td>
-                    <td style="font-size:0.68rem;color:var(--text-tertiary);font-family:var(--font-mono)">${r.id>=1000?'CUSTOM':'DEFAULT'}</td>
-                    <td>
-                        <button class="admin-action-btn" onclick="openResourceForm(${r.id})">Editar</button>
-                        <button class="admin-action-btn admin-action-btn--danger" onclick="deleteResource(${r.id})">
-                            ${r.id>=1000?'Eliminar':'Ocultar'}
-                        </button>
-                    </td>
-                </tr>`).join('')}
-            </tbody>
-        </table>
-        ${hiddenList.length ? `
-            <div style="margin-top:0.75rem;padding:0.6rem 0.9rem;background:var(--bg-tertiary);border-radius:8px;font-size:0.75rem;color:var(--text-tertiary);font-family:var(--font-mono)">
-                ${hiddenList.length} oculto${hiddenList.length!==1?'s':''}: ${hiddenList.map(r=>esc(r.name)).join(', ')}
-            </div>` : ''}
-    `;
-}
-function openResourceForm(id = null) {
-    document.getElementById('f-editing-id').value = id || '';
-    document.getElementById('form-title').textContent = id ? 'Editar Recurso' : 'Añadir Recurso';
-    if (id) {
-        const item = getAllResources().find(r => r.id === id);
-        if (!item) return;
-        document.getElementById('f-name').value     = item.name;
-        document.getElementById('f-category').value = item.category;
-        document.getElementById('f-url').value      = item.url;
-        document.getElementById('f-desc').value     = item.desc;
-        document.getElementById('f-notes').value    = item.notes || '';
-        document.getElementById('f-tags').value     = item.tags.join(', ');
-        document.getElementById('f-trust').value    = item.trust;
-        document.getElementById('f-color').value    = item.color || '#00D4FF';
-        document.getElementById('f-warn').value     = item.warn || '';
-        document.getElementById('f-isnew').checked  = !!item.isNew;
-    } else {
-        ['f-name','f-category','f-url','f-desc','f-notes','f-warn'].forEach(i => {
-            document.getElementById(i).value = '';
-        });
-        document.getElementById('f-tags').value    = '';
-        document.getElementById('f-trust').value   = 3;
-        document.getElementById('f-color').value   = '#00D4FF';
-        document.getElementById('f-isnew').checked = false;
-    }
-    const container = document.getElementById('resource-form-container');
-    container.style.display = 'block';
-    setTimeout(() => container.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
-}
-function cancelResourceForm() {
-    document.getElementById('resource-form-container').style.display = 'none';
-    document.getElementById('f-editing-id').value = '';
-}
-function saveResource() {
-    const name     = document.getElementById('f-name').value.trim();
-    const category = document.getElementById('f-category').value.trim();
-    const url      = document.getElementById('f-url').value.trim();
-    const desc     = document.getElementById('f-desc').value.trim();
-    if (!name || !category || !url || !desc) {
-        showToast('Rellena los campos obligatorios (*)', 'error'); return;
-    }
-    const data = {
-        name, category, url, desc,
-        notes: document.getElementById('f-notes').value.trim(),
-        tags:  document.getElementById('f-tags').value.split(',').map(t => t.trim()).filter(Boolean),
-        trust: Math.min(5, Math.max(1, parseInt(document.getElementById('f-trust').value) || 3)),
-        color: document.getElementById('f-color').value,
-        warn:  document.getElementById('f-warn').value.trim() || undefined,
-        isNew: document.getElementById('f-isnew').checked,
-        added: new Date().toISOString().slice(0,10),
-    };
-    const editId = parseInt(document.getElementById('f-editing-id').value) || null;
-    if (editId) {
-        if (editId >= 1000) {
-            const idx = customResources.findIndex(r => r.id === editId);
-            if (idx >= 0) customResources[idx] = { ...customResources[idx], ...data };
-            saveJSON('nexus_custom', customResources);
-        } else {
-            overrides[editId] = data;
-            saveJSON('nexus_overrides', overrides);
+function updateAuthUI(user) {
+    const btn        = document.getElementById('btn-auth');
+    const avatar     = document.getElementById('auth-avatar');
+    const profileBtn = document.getElementById('btn-profile');
+    if (!btn) return;
+    if (user) {
+        btn.textContent = 'Salir';
+        btn.title = user.displayName || '';
+        if (avatar) {
+            avatar.src = user.photoURL || '';
+            avatar.style.display = user.photoURL ? 'inline-block' : 'none';
+            avatar.onclick = openProfileModal;
         }
-        showToast('Recurso actualizado', 'success');
+        if (profileBtn) profileBtn.style.display = 'inline-flex';
+        if (!sessionStorage.getItem('_nx_banner_shown')) {
+            sessionStorage.setItem('_nx_banner_shown', '1');
+            showShareBanner();
+        }
     } else {
-        const maxId = Math.max(...customResources.map(r => r.id), 999);
-        customResources.push({ id: maxId + 1, ...data });
-        saveJSON('nexus_custom', customResources);
-        showToast('Recurso añadido', 'success');
+        btn.textContent = '⊙ Login';
+        btn.title = 'Iniciar sesión';
+        if (avatar) { avatar.style.display = 'none'; avatar.onclick = null; }
+        if (profileBtn) profileBtn.style.display = 'none';
+        if (!sessionStorage.getItem('_nx_banner_shown')) {
+            sessionStorage.setItem('_nx_banner_shown', '1');
+            setTimeout(showShareBanner, 3000);
+        }
     }
-    cancelResourceForm();
-    renderAdminList();
-    render();
 }
-function deleteResource(id) {
-    const label = id >= 1000 ? 'eliminar' : 'ocultar';
-    if (!confirm(`¿Seguro que quieres ${label} este recurso?`)) return;
-    if (id >= 1000) {
-        customResources = customResources.filter(r => r.id !== id);
-        saveJSON('nexus_custom', customResources);
-    } else {
-        hiddenIds.push(id);
-        saveJSON('nexus_hidden', hiddenIds);
+function handleAuthBtn() {
+    if (!window._nx) return;
+    if (_nx.user()) { _nx.logout(); } else { _nx.login(); }
+}
+
+// ============================================================
+// PROFILE MODAL
+// ============================================================
+async function openProfileModal() {
+    if (!window._nx || !_nx.user()) { showToast('Inicia sesión primero', 'info'); return; }
+    const overlay = document.getElementById('profile-modal-overlay');
+    if (!overlay) return;
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    const btn = document.getElementById('profile-save-btn');
+    btn.disabled = true; btn.textContent = 'Cargando…';
+    const profile = await _nx.getProfile();
+    if (profile) {
+        document.getElementById('profile-name-input').value = profile.displayName || '';
+        document.getElementById('profile-bio-input').value  = profile.bio || '';
     }
-    renderAdminList();
-    render();
-    showToast('Recurso eliminado', 'success');
+    const u = _nx.user();
+    document.getElementById('profile-email').textContent = u.email || '';
+    document.getElementById('profile-uid').textContent   = u.uid ? u.uid.slice(0, 8) + '…' : '';
+    const img = document.getElementById('profile-avatar-img');
+    if (img) { img.src = u.photoURL || ''; img.style.display = u.photoURL ? 'block' : 'none'; }
+    btn.disabled = false; btn.textContent = 'Guardar';
 }
-function resetHidden() {
-    if (!hiddenIds.length) { showToast('No hay recursos ocultos', 'info'); return; }
-    hiddenIds = [];
-    saveJSON('nexus_hidden', hiddenIds);
-    render();
-    showToast('Recursos restaurados', 'success');
+function closeProfileModal() {
+    const overlay = document.getElementById('profile-modal-overlay');
+    if (overlay) overlay.classList.remove('active');
+    document.body.style.overflow = '';
+}
+async function saveProfile() {
+    if (!window._nx || !_nx.user()) return;
+    const nameEl = document.getElementById('profile-name-input');
+    const bioEl  = document.getElementById('profile-bio-input');
+    const btn    = document.getElementById('profile-save-btn');
+    const name   = nameEl.value.trim();
+    const bio    = bioEl.value.trim();
+    if (!name) { showToast('El nombre no puede estar vacío', 'error'); nameEl.focus(); return; }
+    btn.disabled = true; btn.textContent = 'Guardando…';
+    const ok = await _nx.saveProfile(name, bio);
+    btn.disabled = false; btn.textContent = 'Guardar';
+    if (ok) { showToast('Perfil actualizado', 'success'); closeProfileModal(); }
+    else    { showToast('Error al guardar el perfil', 'error'); }
+}
+
+// ============================================================
+// SHARE BANNER
+// ============================================================
+function showShareBanner() {
+    if (document.getElementById('share-banner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'share-banner';
+    banner.className = 'share-banner';
+    banner.innerHTML = `
+        <span class="share-banner-icon">⚡</span>
+        <span class="share-banner-text">¿Te resulta útil Jacsaw Nexus? <strong>Compártelo</strong> con la comunidad.</span>
+        <button class="share-banner-btn" onclick="window._appShareProject()">Compartir</button>
+        <button class="share-banner-close" onclick="this.parentElement.remove()" title="Cerrar">✕</button>
+    `;
+    document.body.appendChild(banner);
+    requestAnimationFrame(() => requestAnimationFrame(() => banner.classList.add('visible')));
+}
+function shareProject() {
+    const url = location.origin + location.pathname;
+    navigator.clipboard.writeText(url).then(() => showToast('¡Enlace copiado! 🙌', 'success'));
+    document.getElementById('share-banner')?.remove();
 }
 
 // ============================================================
@@ -769,6 +779,36 @@ function showToast(msg, type = 'info') {
 }
 
 // ============================================================
+// DIALOGS
+// ============================================================
+function showAlert(message) {
+    document.getElementById('alert-message').textContent = message;
+    document.getElementById('alert-cancel-btn').style.display = 'none';
+    document.getElementById('alert-modal-overlay').classList.add('active');
+    return new Promise(resolve => {
+        document.getElementById('alert-ok-btn').onclick = () => {
+            document.getElementById('alert-modal-overlay').classList.remove('active');
+            resolve();
+        };
+    });
+}
+function showConfirm(message) {
+    document.getElementById('alert-message').textContent = message;
+    document.getElementById('alert-cancel-btn').style.display = 'inline-block';
+    document.getElementById('alert-modal-overlay').classList.add('active');
+    return new Promise(resolve => {
+        document.getElementById('alert-ok-btn').onclick = () => {
+            document.getElementById('alert-modal-overlay').classList.remove('active');
+            resolve(true);
+        };
+        document.getElementById('alert-cancel-btn').onclick = () => {
+            document.getElementById('alert-modal-overlay').classList.remove('active');
+            resolve(false);
+        };
+    });
+}
+
+// ============================================================
 // SIDEBAR MOBILE
 // ============================================================
 function closeSidebar() {
@@ -777,16 +817,59 @@ function closeSidebar() {
 }
 
 // ============================================================
+// ── EXPONER FUNCIONES GLOBALES (onclick en HTML) ─────────────
+// Al ser type="module" las funciones no son globales por defecto.
+// Usamos prefijo _app para evitar colisiones de nombres.
+// ============================================================
+window._appTrackAndVisit = (e, id, trust, url) => trackAndVisit(e, id, trust, url);
+window._appOpenDetail    = (id) => openDetailModal(id);
+window._appToggleFav     = (id) => toggleFavorite(id);
+window._appToggleFavModal = (id, btn) => toggleFavInModal(id, btn);
+window._appCopyUrl       = (url, btn) => copyUrl(url, btn);
+window._appToggleNotes   = (id, btn) => toggleNotes(id, btn);
+window._appSelectHistory = (term) => selectHistory(term);
+window._appShareProject  = () => shareProject();
+// Compatibilidad con código existente en otros archivos
+window.filterByCategory  = (cat) => filterByCategory(cat);
+window.openProfileModal  = () => openProfileModal();
+window.closeProfileModal = () => closeProfileModal();
+
+// ============================================================
 // INIT
 // ============================================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+
+    // Cargar datos de Firestore
+    await loadNexusData();
+
+    // Configurar callback de auth antes de init
+    window._nxAuthChange = async function (user) {
+        updateAuthUI(user);
+        if (user) {
+            const cloudFavs = await _nx.getFavs();
+            if (cloudFavs !== null) {
+                favorites = cloudFavs;
+                saveJSON('nexus_favorites', favorites);
+                updateFavCount();
+                render();
+            }
+        }
+    };
+
+    if (window._nx) {
+        _nx.init().then(async () => {
+            _popularityMap = await _nx.getPopular(100);
+            render();
+        });
+    }
+
     initTheme();
     readUrlParams();
 
-    // Build category chips
-    const all = getAllResources();
+    // Construir chips de categorías
+    const all  = getAllResources();
     const cats = [...new Set(all.map(r => r.category))];
-    const fc = document.getElementById('filter-container');
+    const fc   = document.getElementById('filter-container');
     cats.forEach(cat => {
         const d = document.createElement('div');
         d.className = 'category-chip';
@@ -798,78 +881,105 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCategoryChips();
     updateFavCount();
 
-    // Search
+    // Cachear referencias DOM
+    DOM = {
+        resourceGrid:     document.getElementById('resource-grid'),
+        resultInfo:       document.getElementById('result-info'),
+        sidebarFavCount:  document.getElementById('sidebar-fav-count'),
+        trustFilterGroup: document.getElementById('trust-filter-group'),
+        btnStats:         document.getElementById('btn-stats'),
+        btnTheme:         document.getElementById('btn-theme'),
+        btnView:          document.getElementById('btn-view'),
+        btnShare:         document.getElementById('btn-share'),
+        sidebar:          document.getElementById('sidebar'),
+        sidebarOverlay:   document.getElementById('sidebar-overlay'),
+        sidebarToggle:    document.getElementById('sidebar-toggle'),
+        detailModalOverlay: document.getElementById('detail-modal-overlay'),
+        detailModalClose:   document.getElementById('detail-modal-close'),
+        navCount:           document.getElementById('nav-count'),
+    };
+
+    // Búsqueda
     const searchEl = document.getElementById('main-search');
     const clearBtn = document.getElementById('clear-search');
-
     searchEl.addEventListener('input', () => {
         STATE.search = searchEl.value;
         clearBtn.style.display = searchEl.value ? 'flex' : 'none';
         showHistory(searchEl);
         render();
     });
-    searchEl.addEventListener('focus', () => showHistory(searchEl));
-    searchEl.addEventListener('blur',  () => setTimeout(hideHistory, 160));
+    searchEl.addEventListener('focus',   () => showHistory(searchEl));
+    searchEl.addEventListener('blur',    () => setTimeout(hideHistory, 160));
     searchEl.addEventListener('keydown', e => {
         if (e.key === 'Enter' && STATE.search.trim()) { addToHistory(STATE.search.trim()); hideHistory(); }
         if (e.key === 'Escape') { searchEl.blur(); hideHistory(); }
     });
-
     clearBtn.addEventListener('click', () => {
         searchEl.value = ''; STATE.search = '';
         clearBtn.style.display = 'none';
         searchEl.focus(); hideHistory(); render();
     });
 
-    // Sort
+    // Ordenar
     const sortEl = document.getElementById('sort-select');
     sortEl.value = STATE.sort;
     sortEl.addEventListener('change', () => { STATE.sort = sortEl.value; render(); });
 
-    // Trust filter
-    document.getElementById('trust-filter-group').addEventListener('click', e => {
+    // Filtro de confianza
+    DOM.trustFilterGroup.addEventListener('click', e => {
         const btn = e.target.closest('.trust-filter-btn');
         if (btn) setTrustFilter(btn.dataset.trust);
     });
 
-    // Navbar buttons
-    document.getElementById('btn-stats').addEventListener('click', toggleStats);
-    document.getElementById('btn-theme').addEventListener('click', toggleTheme);
-    document.getElementById('btn-view').addEventListener('click',  toggleView);
-    document.getElementById('btn-share').addEventListener('click', shareFilter);
+    // Botones de navbar
+    DOM.btnStats.addEventListener('click', toggleStats);
+    DOM.btnTheme.addEventListener('click', toggleTheme);
+    DOM.btnView.addEventListener('click', toggleView);
+    DOM.btnShare.addEventListener('click', shareFilter);
+    document.getElementById('btn-auth')?.addEventListener('click', handleAuthBtn);
+    document.getElementById('btn-profile')?.addEventListener('click', openProfileModal);
 
-    // Sidebar mobile
-    document.getElementById('sidebar-toggle').addEventListener('click', () => {
-        const s = document.getElementById('sidebar');
-        const o = document.getElementById('sidebar-overlay');
-        const isOpen = s.classList.toggle('open');
-        o.classList.toggle('active', isOpen);
+    // Sidebar móvil
+    DOM.sidebarToggle.addEventListener('click', () => {
+        const isOpen = DOM.sidebar.classList.toggle('open');
+        DOM.sidebarOverlay.classList.toggle('active', isOpen);
     });
-    document.getElementById('sidebar-overlay').addEventListener('click', closeSidebar);
+    DOM.sidebarOverlay.addEventListener('click', closeSidebar);
 
-    // Detail modal
-    document.getElementById('detail-modal-close').addEventListener('click', closeDetailModal);
-    document.getElementById('detail-modal-overlay').addEventListener('click', e => {
-        if (e.target === document.getElementById('detail-modal-overlay')) closeDetailModal();
+    // Modal detalle
+    DOM.detailModalClose.addEventListener('click', closeDetailModal);
+    DOM.detailModalOverlay.addEventListener('click', e => {
+        if (e.target === DOM.detailModalOverlay) closeDetailModal();
     });
 
-    // Keyboard shortcuts
+    // Modal perfil
+    document.getElementById('profile-modal-overlay')?.addEventListener('click', e => {
+        if (e.target.id === 'profile-modal-overlay') closeProfileModal();
+    });
+    document.getElementById('profile-modal-close')?.addEventListener('click', closeProfileModal);
+    document.getElementById('profile-save-btn')?.addEventListener('click', saveProfile);
+
+    // Alert modal
+    document.getElementById('alert-modal-overlay')?.addEventListener('click', e => {
+        if (e.target.id === 'alert-modal-overlay')
+            document.getElementById('alert-cancel-btn').click();
+    });
+
+    // Atajos de teclado
     document.addEventListener('keydown', e => {
-        const active = document.activeElement;
-        const inInput = active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT';
+        const active  = document.activeElement;
+        const inInput = ['INPUT','TEXTAREA','SELECT'].includes(active.tagName);
         if (!inInput) {
-            if (e.key === '/') { e.preventDefault(); searchEl.focus(); }
+            if (e.key === '/')                  { e.preventDefault(); searchEl.focus(); }
             if (e.key === 's' || e.key === 'S') toggleStats();
             if (e.key === 'v' || e.key === 'V') toggleView();
             if (e.key === 't' || e.key === 'T') toggleTheme();
         }
         if (e.key === 'Escape') {
-            closeDetailModal(); closeSidebar(); hideHistory();
+            closeDetailModal(); closeSidebar(); hideHistory(); closeProfileModal();
         }
-        if (e.ctrlKey && e.shiftKey && e.key === 'A') { e.preventDefault();  }
     });
 
-    // Animate nav count and render
     animateNavCount();
     render();
 });

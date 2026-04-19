@@ -60,10 +60,54 @@
             border-radius: 4px; 
             margin-bottom: 12px; 
             cursor: zoom-in; 
-            transition: transform 0.2s;
+            transition: transform 0.25s ease, filter 0.25s ease;
+            will-change: transform, filter;
         }
         
         .step img:hover { transform: scale(1.02); filter: brightness(1.1); }
+
+        .tutorial-card {
+            transition: transform 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
+            will-change: transform, box-shadow;
+        }
+        .tutorial-card:hover { transform: translateY(-2px); box-shadow: 0 18px 36px rgba(0,0,0,0.12); }
+
+        details .tutorial-content {
+            opacity: 0;
+            transform: translateY(16px);
+            animation: fadeInUp 0.32s ease-out forwards;
+            will-change: opacity, transform;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .step {
+            opacity: 0;
+            transform: translateY(18px);
+            animation: stepFade 0.45s ease forwards;
+        }
+        details[open] .step:nth-child(1){ animation-delay: 0.05s; }
+        details[open] .step:nth-child(2){ animation-delay: 0.13s; }
+        details[open] .step:nth-child(3){ animation-delay: 0.20s; }
+        details[open] .step:nth-child(4){ animation-delay: 0.27s; }
+        details[open] .step:nth-child(5){ animation-delay: 0.34s; }
+        details[open] .step:nth-child(6){ animation-delay: 0.41s; }
+        details[open] .step:nth-child(7){ animation-delay: 0.48s; }
+        details[open] .step:nth-child(8){ animation-delay: 0.55s; }
+        details[open] .step:nth-child(9){ animation-delay: 0.62s; }
+        details[open] .step:nth-child(10){ animation-delay: 0.69s; }
+        details[open] .step:nth-child(11){ animation-delay: 0.76s; }
+        details[open] .step:nth-child(12){ animation-delay: 0.83s; }
+        details[open] .step:nth-child(13){ animation-delay: 0.90s; }
+        details[open] .step:nth-child(14){ animation-delay: 0.97s; }
+
+        @keyframes stepFade {
+            from { opacity: 0; transform: translateY(18px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
 
         .step-number { 
             display: inline-block; 
@@ -166,6 +210,118 @@
         gap: 10px;
     }
 }
+
+/* Profile Modal Styles */
+.profile-modal {
+    max-width: 500px;
+}
+
+.profile-modal-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.profile-header {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.profile-title {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.2rem;
+}
+
+.profile-meta {
+    margin: 0;
+    color: var(--text-tertiary);
+    font-size: 0.85rem;
+}
+
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.profile-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.profile-label {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.profile-input {
+    padding: 10px 12px;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-radius: 6px;
+    font-family: var(--font-body);
+}
+
+.profile-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.profile-hint {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    margin-top: 2px;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.profile-cancel-btn,
+.profile-save-btn,
+.profile-logout-btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.profile-cancel-btn {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
+}
+
+.profile-cancel-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.profile-save-btn {
+    background: var(--accent);
+    color: var(--bg-primary);
+}
+
+.profile-save-btn:hover {
+    filter: brightness(1.1);
+}
+
+.profile-logout-btn {
+    background: var(--danger);
+    color: white;
+}
+
+.profile-logout-btn:hover {
+    filter: brightness(1.1);
+}
     </style>
 </head>
 <body>
@@ -173,7 +329,14 @@
     <nav class="navbar">
         <a href="index.html" class="logo">Jacsaw Nexus</a>
         <div class="navbar-actions">
-            <a href="index.html" class="nav-btn" style="text-decoration: none;">← Volver al Índice</a>
+            <a href="index.html" class="nav-btn" style="text-decoration: none;">📑 Index</a>
+            <a href="forum.html" class="nav-btn" style="text-decoration: none;">💬 Foro</a>
+            <button class="nav-btn" id="btn-theme" title="Cambiar tema (T)">☀</button>
+            <button class="nav-btn nav-btn--profile" id="btn-profile" title="Mi perfil" style="display:none">⊛ Perfil</button>
+            <button class="nav-btn nav-btn--auth" id="btn-auth" title="Iniciar sesión">⊙ Login</button>
+            <img id="auth-avatar" src="" alt="avatar"
+                 style="display:none;width:26px;height:26px;border-radius:50%;object-fit:cover;margin-left:2px;vertical-align:middle;cursor:pointer;"
+                 title="Ver perfil">
         </div>
     </nav>
     <div class="requirement-banner">
@@ -494,13 +657,73 @@
         <img src="" id="modal-img-content">
     </div>
 
+    <!-- ══════════════════════ PROFILE MODAL ══════════════════════ -->
+    <div class="modal-overlay" id="profile-modal-overlay">
+        <div class="modal profile-modal">
+            <button class="modal-close" id="profile-modal-close">✕</button>
+            <div class="profile-modal-inner">
+                <div class="profile-header">
+                    <img id="profile-avatar-img" src="" alt="avatar" style="display:none;width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--border)">
+                    <div>
+                        <h3 class="profile-title">Mi Perfil</h3>
+                        <p class="profile-meta" id="profile-email" style="font-size:0.75rem;color:var(--text-tertiary);margin:0"></p>
+                        <p class="profile-meta" style="font-size:0.65rem;color:var(--text-tertiary);margin:0;font-family:var(--font-mono)">uid: <span id="profile-uid"></span></p>
+                    </div>
+                </div>
+
+                <div class="profile-form">
+                    <div class="profile-field">
+                        <label class="profile-label" for="profile-name-input">Nombre público <span style="color:var(--danger)">*</span></label>
+                        <input type="text" id="profile-name-input" class="profile-input"
+                               maxlength="32" placeholder="Tu nombre o alias"
+                               autocomplete="off" spellcheck="false">
+                        <span class="profile-hint">Máx. 32 caracteres. Se muestra en toda la comunidad.</span>
+                    </div>
+                    <div class="profile-field">
+                        <label class="profile-label" for="profile-bio-input">Bio</label>
+                        <textarea id="profile-bio-input" class="profile-input profile-textarea"
+                                  maxlength="160" rows="3"
+                                  placeholder="Cuéntanos algo (opcional)…"></textarea>
+                        <span class="profile-hint">Máx. 160 caracteres.</span>
+                    </div>
+                </div>
+
+                <div class="profile-actions">
+                    <button class="profile-cancel-btn" onclick="closeProfileModal()">Cancelar</button>
+                    <button class="profile-save-btn" id="profile-save-btn">Guardar</button>
+                    <button class="profile-logout-btn" id="profile-logout-btn">Cerrar sesión</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════ ALERT MODAL ══════════════════════ -->
+    <div class="modal-overlay" id="alert-modal-overlay">
+        <div class="modal alert-modal">
+            <div class="alert-modal-content">
+                <p id="alert-message"></p>
+                <div class="alert-buttons">
+                    <button id="alert-ok-btn">OK</button>
+                    <button id="alert-cancel-btn" style="display:none">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════ TOAST ══════════════════════ -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="_nx.js"></script>
+    <script src="tutoriales.js"></script>
     <script>
         // Función para ampliar la imagen
         const modal = document.getElementById('img-modal');
         const modalImg = document.getElementById('modal-img-content');
         
-        // Seleccionamos todas las imágenes de los pasos
+        // Seleccionamos todas las imágenes de los pasos y activamos carga diferida
         document.querySelectorAll('.step img').forEach(img => {
+            img.loading = 'lazy';
+            img.decoding = 'async';
             img.onclick = function() {
                 modal.style.display = "flex";
                 modalImg.src = this.src;
